@@ -174,28 +174,22 @@ func useK8sCurrContext(context string) ([]byte, error) {
 }
 
 func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string, packfile string, ns string) {
-	dryRunOpt := ""
-	debugOpt := ""
-	if dryrun {
-		dryRunOpt = "--dry-run"
-		debugOpt = "--debug"
-	}
-
+	msg := "Running helm upgrade"
 	cmdName := "helm"
 	cmdArgs := []string{
-		"upgrade", fullReleaseName,
-		"--install", appPath,
-		"--set", setValues,
-		"--values", packfile,
-		"--namespace", ns,
-		dryRunOpt, debugOpt}
+		"upgrade", fullReleaseName, "--install", appPath, "--set", setValues, "--values", packfile, "--namespace", ns}
+
+	if dryrun {
+		cmdArgs = append(cmdArgs, "--dry-run", "--debug")
+		msg += " (dry run)"
+	}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmdString := strings.Join(cmd.Args, " ")
 	echoGoodMessage(cmdString)
 
 	if !noExecute {
-		fmt.Println("\n\nRunning helm upgrade...\n\n")
+		fmt.Printf("\n%s\n", msg)
 		out, _ := cmd.CombinedOutput()
 		fmt.Printf("%s", out)
 	}
