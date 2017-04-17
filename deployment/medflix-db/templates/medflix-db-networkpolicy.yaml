@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+ name: medflix-db
+spec:
+ podSelector:
+  matchLabels:
+    networkpolicy_datasource: medflix-db
+ ingress:
+  - from:
+     - namespaceSelector:
+        matchLabels:
+         networkpolicy_name: medbridge
+     - podSelector:
+        matchLabels:
+         networkpolicy_datauser_medflix-db: medflix-db
+    ports:
+     - protocol: tcp
+       port: 3306

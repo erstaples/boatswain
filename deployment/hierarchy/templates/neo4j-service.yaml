@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: "{{ .Values.packageId }}-{{.Values.Neo4j.Component}}"
+spec:
+  ports:
+  - port: {{.Values.Neo4j.Port}}
+    protocol: TCP
+    targetPort: {{.Values.Neo4j.Port}}
+  selector:
+    component: "{{ .Values.packageId }}-{{.Values.Neo4j.Component}}"
+  sessionAffinity: None
+  type: ClusterIP

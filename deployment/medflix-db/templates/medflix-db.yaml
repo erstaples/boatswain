@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: List
+metadata: {}
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+  spec:
+    type: {{ .Values.service.type }}
+  {{ if eq .Values.service.type "ExternalName" }}
+    externalName: {{ .Values.service.externalName }}
+  {{ else }}
+    selector:
+      component: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+  {{ end }}
+    ports:
+    - port: {{ .Values.service.externalPort }}
+      protocol: TCP
+      targetPort: {{ .Values.service.internalPort }}
+    sessionAffinity: None
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+  type: Opaque
+  data:
+    host: {{ (print (or .Values.packageId .Release.Name ) "-" .Values.service.baseName ) | b64enc | quote }}
+    name: {{ .Values.secret.name | b64enc | quote }}
+    user: {{ .Values.secret.user | b64enc | quote }}
+    password:  {{ .Values.secret.password | b64enc | quote }}
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        component: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          networkpolicy_datasource: medflix-db
+          component: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+      spec:
+        containers:
+        - env:
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+                key: name
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+                key: user
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+                key: password
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "{{ or .Values.packageId .Release.Name }}-{{ .Values.service.baseName }}"
+                key: password
+          image:  mysql:5.6
+          name: "{{ .Release.Name }}-{{ .Values.service.baseName }}"
+          ports:
+          - containerPort: 3306
+            name: mysql
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 1
+            requests:
+              cpu: 100m
+          volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: "{{ .Release.Name }}-{{ .Values.data.name }}"
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        serviceAccount: default
+        serviceAccountName: default
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: "{{ .Release.Name }}-{{ .Values.data.name }}"
+          persistentVolumeClaim:
+            claimName: "{{ or .Values.packageId .Release.Name }}-medflix-pvc"

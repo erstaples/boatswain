@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name}}-{{ .Values.Hierarchy.Nginx.Name }}"
+data:
+  default.conf: |
+    server {
+        listen 80;
+        index index.php index.html;
+        server_name ~^(?<domain>.+)$;
+        error_log /var/log/nginx/error.log info;
+        access_log /var/log/nginx/access.log;
+        root /var/www/public;
+
+        location / {
+            root /var/www/public;
+            try_files $uri $uri/ /index.php;
+        }
+
+        location ~ \.php$ {
+            fastcgi_buffer_size 32k;
+            fastcgi_buffers 8 16k;
+            root /var/www/public;
+            include /etc/nginx/fastcgi_params;
+            fastcgi_pass localhost:{{ .Values.Hierarchy.Php.Port }};
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            fastcgi_split_path_info ^(.+\.php)(.*)$;
+        }
+    }

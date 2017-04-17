@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+ name: ace
+spec:
+ podSelector:
+  matchLabels:
+    networkpolicy_datasource: ace
+ ingress:
+  - from:
+     - namespaceSelector:
+        matchLabels:
+         networkpolicy_name: ace
+     - podSelector:
+        matchLabels:
+         networkpolicy_datauser: ace
+    ports:
+     - protocol: tcp
+       port: 80

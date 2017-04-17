@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: List
+metadata: {}
+items:
+{{ if .Values.MedBridge.Services.MedbridgeEdDbReadSlave.ExternalName }}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_READSLAVE_HOST }}"
+    labels:
+      release: {{ .Release.Name }}
+  spec:
+    type: ExternalName
+    externalName: {{ .Values.MedBridge.Services.MedbridgeEdDbReadSlave.ExternalName }}
+    ports:
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
+    sessionAffinity: None
+{{ end }}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_DB_HOST  }}"
+    labels:
+      release: {{ .Release.Name }}
+  spec:
+  {{ if .Values.MedBridge.Services.MedbridgeEdDb.ExternalName }}
+    type: ExternalName
+    externalName: {{ .Values.MedBridge.Services.MedbridgeEdDb.ExternalName }}
+  {{ else }}
+    selector:
+      component: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_DB_HOST  }}"
+  {{ end }}
+    ports:
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
+    sessionAffinity: None
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_DB_HOST  }}"
+  type: Opaque
+  data:
+    name: {{ .Values.MedBridge.Secrets.MedbridgeEdDb.DbName | b64enc | quote }}
+    user: {{ .Values.MedBridge.Secrets.MedbridgeEdDb.User | b64enc | quote }}
+    password:  {{ .Values.MedBridge.Secrets.MedbridgeEdDb.Password | b64enc | quote }}
+{{ if ne .Values.MedBridge.Services.MedbridgeEdDb.Type "ExternalName" }}
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_DB_HOST }}"
+    labels:
+      release: {{ .Release.Name }}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        component: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_DB_HOST  }}"
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          component: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_DB_HOST  }}"
+          networkpolicy_datasource: medbridge
+      spec:
+        containers:
+        - env:
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Secrets.MedbridgeEdDb.Name  }}"
+                key: name
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.packageId}}-{{ .Values.MedBridge.Secrets.MedbridgeEdDb.Name  }}"
+                key: user
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Secrets.MedbridgeEdDb.Name  }}"
+                key: password
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Secrets.MedbridgeEdDb.Name  }}"
+                key: password
+          image:  "{{ .Values.MedBridge.Images.MySQL.Image }}:{{ .Values.MedBridge.Images.MySQL.ImageTag }}"
+          imagePullPolicy: IfNotPresent
+          name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Env.MEDBRIDGE_ED_DB_HOST  }}"
+          args: ['--ignore-db-dir=lost+found']
+          ports:
+          - containerPort: 3306
+            name: mysql
+            protocol: TCP
+          resources:
+            limits:
+              cpu: {{ .Values.MedBridge.Resources.MySQL.Limits.CPU }}
+              memory: {{ .Values.MedBridge.Resources.MySQL.Limits.Memory }}
+            requests:
+              cpu: {{ .Values.MedBridge.Resources.MySQL.Requests.CPU }}
+              memory: {{ .Values.MedBridge.Resources.MySQL.Requests.Memory }}
+          volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: "{{ .Values.packageId }}-medbridge-db"
+          - mountPath: /etc/mysql
+            name: mysql-ini-config
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        serviceAccount: default
+        serviceAccountName: default
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: "{{ .Values.packageId }}-medbridge-db"
+          persistentVolumeClaim:
+            claimName: "{{ .Values.packageId }}-{{ .Values.MedBridge.Persistence.MySQL.Name }}"
+        - name: mysql-ini-config
+          configMap:
+            name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Configs.ConfigMaps.MySQL.Name }}"
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Persistence.MySQL.Name }}"
+    labels:
+      app: "{{ .Values.MedBridge.Persistence.MySQL.Name }}"
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+      release: "{{ .Release.Name }}"
+  spec:
+    accessModes:
+    -  "{{ .Values.MedBridge.Persistence.MySQL.AccessMode }}"
+    {{ if .Values.MedBridge.Persistence.MySQL.AwsEbsVolumeId }}
+    awsElasticBlockStore:
+      volumeID:  "{{ .Values.MedBridge.Persistence.MySQL.AwsEbsVolumeId }}"
+    {{ end }}
+    {{ if .Values.MedBridge.Persistence.MySQL.HostPath }}
+    hostPath:
+      path:  "{{ .Values.MedBridge.Persistence.MySQL.HostPath  }}"
+    {{ end }}
+    capacity:
+      storage: "{{ .Values.MedBridge.Persistence.MySQL.Size }}"
+    persistentVolumeReclaimPolicy: Retain
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.MedBridge.Persistence.MySQL.Name }}"
+    labels:
+      release: {{ .Release.Name }}
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: "{{ .Values.MedBridge.Persistence.MySQL.Size }}"
+    volumeName: "{{ .Values.packageId }}-{{ .Values.MedBridge.Persistence.MySQL.Name }}"
+{{ end }}

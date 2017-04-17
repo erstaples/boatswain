@@ -1,0 +1,34 @@
+# Default values for ace.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+configmap:
+  name: ace-nginx-configmap
+deployment:
+  name: ace
+  mountPath: /var/www
+  hostPath:
+nginx:
+  image: 191682557156.dkr.ecr.us-east-1.amazonaws.com/medbridge/ace-nginx
+  imageTag: "1b1d513"
+  pullPolicy: IfNotPresent
+  internalPort: 80
+phpfpm:
+  image: 191682557156.dkr.ecr.us-east-1.amazonaws.com/medbridge/ace-phpfpm
+  imageTag: "1b1d513"
+  pullPolicy: IfNotPresent
+  internalPort: 9000
+service:
+  name: ace-svc
+  type: ClusterIP
+  externalPort: 80
+  internalPort: 80
+resources:
+  limits:
+    cpu: 1
+    memory: 128Mi
+  requests:
+    cpu: 500m
+    memory: 128Mi
+databaseReference:
+  medbridgeEd: medbridge-db

@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+ name: hierarchy
+spec:
+ podSelector:
+  matchLabels:
+    networkpolicy_datasource: hierarchy
+ ingress:
+  - from:
+     - namespaceSelector:
+        matchLabels:
+         networkpolicy_name: medbridge
+     - podSelector:
+        matchLabels:
+         networkpolicy_datauser_hierarchy: hierarchy
+    ports:
+     - protocol: tcp
+       port: 80

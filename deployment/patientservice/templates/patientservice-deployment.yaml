@@ -1,0 +1,93 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    component: "{{.Values.packageId}}-{{ .Values.PatientService.Name }}"
+    networkpolicy_ingress: expose
+  name: "{{.Values.packageId}}-{{ .Values.PatientService.Name }}"
+spec:
+  replicas: {{.Values.PatientService.Replicas}}
+  selector:
+    matchLabels:
+      component: "{{.Values.packageId}}-{{ .Values.PatientService.Name }}"
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        component: "{{.Values.packageId}}-{{ .Values.PatientService.Name }}"
+        networkpolicy_datasource: "{{ .Values.PatientService.Name }}"
+        networkpolicy_datasource_prometheus: "scrapable"
+        build_image: "{{ .Values.PatientService.ImageTag }}"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/probe: "true"
+        prometheus.io/port: "8001"
+        prometheus.io/path: "/metrics"
+
+    spec:
+      containers:
+      - image: "{{ .Values.PatientService.Image }}:{{ .Values.PatientService.ImageTag }}"
+        imagePullPolicy: "{{ .Values.PatientService.ImagePullPolicy }}"
+        name: "{{ .Values.PatientService.Name }}"
+        resources:
+          requests:
+            cpu: {{ .Values.PatientService.Cpu }}
+            memory: {{ .Values.PatientService.Memory }}
+          limits:
+            cpu: {{ .Values.PatientService.CpuLimit }}
+            memory: {{ .Values.PatientService.MemoryLimit }}
+        {{ if not .Values.Volume.sourceCode }}
+        livenessProbe:
+          initialDelaySeconds: 10
+          httpGet:
+            path: /healthz
+            port: 8001
+        {{ end }}
+        {{ if .Values.Volume.sourceCode }}
+        volumeMounts:
+        - name: source
+          mountPath: /go/src
+        command: ["sleep", "1000000"]
+        {{ end }}
+        ports:
+        - containerPort: {{ .Values.PatientService.Port }}
+          protocol: TCP          
+        - containerPort: 8001
+          protocol: TCP  
+        env:
+          - name: PATIENT_SERVICE_APP_NAME
+            value: "{{ .Values.PatientService.NewrelicName }}"
+          - name: PATIENT_SERVICE_MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.packageId }}-{{ .Values.MySQL.Name }}"
+                key: user
+          - name: PATIENT_SERVICE_MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef: 
+                name: "{{ .Values.packageId }}-{{ .Values.MySQL.Name }}"
+                key: password
+          - name: PATIENT_SERVICE_MYSQL_ENDPOINT
+            valueFrom:
+              secretKeyRef: 
+                name: "{{ .Values.packageId }}-{{ .Values.MySQL.Name }}"
+                key: host
+          - name: PATIENT_SERVICE_MEDBRIDGE_TOKEN
+            value: {{.Values.PatientService.SecurityToken}}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      {{ if .Values.Volume.sourceCode }}
+      volumes:
+        - name: source
+          hostPath:
+            path: {{ .Values.Volume.sourceCode }}
+      {{ end }}
+
+status: {}

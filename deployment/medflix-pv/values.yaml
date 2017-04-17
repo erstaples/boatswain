@@ -1,0 +1,13 @@
+data:
+  awsEbsVolumeId: vol-0fce31ec0c2dd3a2c
+  awsRegion: us-west-1a
+  size: 100Gi
+  claimName: medflix-pvc
+
+Persistence:
+  Name: meflixpv
+  AccessMode: ReadWriteOnce
+  Type: hostPath
+  Path: /Users/eric/data/medflix
+  Size: 10Gi
+

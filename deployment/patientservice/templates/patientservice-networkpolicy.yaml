@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: List
+metadata: {}
+items:
+# Network Policy for PatientService deployment pods
+- apiVersion: extensions/v1beta1
+  kind: NetworkPolicy
+  metadata:
+    name: {{ .Values.packageId }}-{{ .Values.PatientService.Name }}
+  spec:
+    podSelector:
+      matchLabels:
+        networkpolicy_datasource: "{{ .Values.PatientService.Name }}"
+    ingress:
+      - from:
+        - namespaceSelector:
+            matchLabels:
+              networkpolicy_name: medbridge
+        - podSelector:
+            matchLabels:
+              networkpolicy_datauser_patientservice: patientservice
+        ports:
+          - protocol: tcp
+            port: 9000
+          - protocol: tcp
+            port: 80
+# Network Policy for MySQL DB Pods
+- apiVersion: extensions/v1beta1
+  kind: NetworkPolicy
+  metadata:
+    name: {{ .Values.packageId }}-{{ .Values.MySQL.Name }}
+  spec:
+    podSelector:
+      matchLabels:
+        networkpolicy_datasource: {{.Values.packageId}}-{{.Values.MySQL.Name}}
+    ingress:
+      - from:
+        - namespaceSelector:
+            matchLabels:
+              networkpolicy_name: default
+        - podSelector:
+            matchLabels:
+              networkpolicy_datauser: "{{.Values.packageId}}-{{ .Values.PatientService.Name }}"
+        ports:
+          - protocol: tcp
+            port: 3306

@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Installation of the Medbridge PatientService
+name: patientservice
+version: 0.1

@@ -1,0 +1,40 @@
+
+
+MedBridge:
+
+  ImageTag: "ffebf4d"
+  Strategy: RollingUpdate
+  Replicas: 2
+  LivenessProbe: true
+  Images:
+    Source:
+      ImageTag: "7f23ca7"
+  Services:
+    MedbridgeEdDb:
+      Type: ExternalName
+      ExternalName: medbridge.c3qycbyc0w1w.us-west-1.rds.amazonaws.com
+    MedbridgeEdDbReadSlave:
+      ExternalName: medbridge-read-only-03-2017.c3qycbyc0w1w.us-west-1.rds.amazonaws.com
+  Secrets:
+    MedbridgeEdDb:
+      User: medbridge-app
+      Password: Bd5gAxWdEKTeynoR8USSEXMQPkdHLz
+    AWS:
+      AccessKeyId: AKIAI2MBMHMV3RIW4DJQ
+      SecretAccessKeyId: 1yetPhU6SBbooYKwge4asfOLCH3eToUb3LeCBsME
+      Region: us-east-1
+    NewRelic:
+      LicenseKey: 1c3435db8b6efd9b18db01d0c4a3c7fa8217abb2
+  NewRelic:
+    AppName: medbridge.io
+  Env:
+    APP_ENV: production
+    MEDBRIDGE_ED_DB_HOST: medbridge-db
+    MEDBRIDGE_ED_READSLAVE_HOST: medbridge-db-readslave
+  Configs:
+    ConfigMaps:
+      Nginx:
+        SitesEnabled:
+        - www.medbridge.io.conf
+
+

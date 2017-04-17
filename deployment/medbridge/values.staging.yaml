@@ -1,0 +1,19 @@
+MedBridge:
+
+  ImageTag: "ffebf4d"
+  LivenessProbe: true
+  Persistence:
+    MySQL:
+      AwsEbsVolumeId: vol-0e8c05926724c3856
+  Services:
+    MedbridgeEdDb:
+      Type: ClusterIP
+  Secrets:
+    AWS:
+      AccessKeyId: AKIAI2MBMHMV3RIW4DJQ
+      SecretAccessKeyId: 1yetPhU6SBbooYKwge4asfOLCH3eToUb3LeCBsME
+      Region: us-east-1
+    NewRelic:
+      LicenseKey: 1c3435db8b6efd9b18db01d0c4a3c7fa8217abb2
+  NewRelic:
+    AppName: medbridge.k8staging

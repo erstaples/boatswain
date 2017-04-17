@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: "{{ .Values.packageId }}-{{ .Values.Neo4j.Persistence.Name }}"
+  labels:
+    app: {{ template "fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: "{{ .Values.Neo4j.Component }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Values.packageId }}"
+spec:
+  accessModes:
+  -  "{{ .Values.Neo4j.Persistence.AccessMode }}"
+  {{ if eq "awsElasticBlockStore" .Values.Neo4j.Persistence.Type }}
+  awsElasticBlockStore:
+    fsType: ext4
+    volumeID:  "{{ .Values.Neo4j.Persistence.AwsVolumeId }}"
+  {{ end }}
+  {{ if eq "hostPath" .Values.Neo4j.Persistence.Type }}
+  hostPath:
+    path:  "{{ .Values.Neo4j.Persistence.Path }}"
+  {{ end }}
+  capacity:
+    storage: "{{ .Values.Neo4j.Persistence.Size }}"
+  persistentVolumeReclaimPolicy: Retain

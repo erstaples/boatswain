@@ -1,0 +1,429 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.MedBridge.Configs.ConfigMaps.Nginx.Name }}-sitesavailable
+data:
+
+  ##############
+  # Dev Config #
+  ##############
+
+  localmed.com.conf: |
+    server {
+        listen 80;
+
+        index index.php index.html;
+        server_name ~^(?<domain>.+)$;
+        error_log /var/log/nginx/error.log info;
+        access_log /var/log/nginx/access.log main;
+        root /var/www/medbridge/httpdocs;
+
+        location / {
+            rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+            root /var/www/medbridge/httpdocs;
+            try_files $uri $uri/ /index.php;
+          }
+
+
+        location ~ \.php$ {
+            fastcgi_buffer_size 32k;
+            fastcgi_buffers 8 16k;
+            root /var/www/medbridge/httpdocs;
+            include /etc/nginx/fastcgi_params;
+            fastcgi_pass localhost:9000;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            fastcgi_split_path_info ^(.+\.php)(.*)$;
+        }
+    }
+
+
+
+  ################
+  # Prod Configs #
+  ################
+
+  healthpathconnect.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           healthpathconnect.com;
+      root /var/www/medbridge/httpdocs;
+
+      access_log            /var/log/nginx/healthpathconnect.com.access.log;
+      error_log             /var/log/nginx/healthpathconnect.com.error.log;
+
+      location / {
+        return 301 https://www.healthpathconnect.com$request_uri;
+      }
+    }
+
+  healthpatheducation.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           healthpatheducation.com;
+      root /var/www/medbridge/httpdocs;
+
+      access_log            /var/log/nginx/healthpatheducation.com.access.log;
+      error_log             /var/log/nginx/healthpatheducation.com.error.log;
+
+      location / {
+        return 301 https://www.healthpatheducation.com$request_uri;
+      }
+    }
+
+  medbridgeconnect.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           medbridgeconnect.com;
+      root /var/www/medbridge/httpdocs;
+
+      access_log            /var/log/nginx/medbridgeconnect.com.access.log;
+      error_log             /var/log/nginx/medbridgeconnect.com.error.log;
+
+      location / {
+        return 301 https://www.medbridgeconnect.com$request_uri;
+      }
+    }
+
+  medbridgeeducation.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           medbridgeeducation.com;
+      root /var/www/medbridge/httpdocs;
+
+      access_log            /var/log/nginx/medbridgeeducation.com.access.log;
+      error_log             /var/log/nginx/medbridgeeducation.com.error.log;
+
+      location / {
+        return 301 https://www.medbridgeeducation.com$request_uri;
+      }
+    }
+
+  medbridgego.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           medbridgego.com;
+      root /var/www/medbridge/httpdocs;
+
+      access_log            /var/log/nginx/medbridgego.com.access.log;
+      error_log             /var/log/nginx/medbridgego.com.error.log;
+
+      location / {
+        return 301 https://www.medbridgego.com$request_uri;
+      }
+    }
+
+  medbridgemassage.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           medbridgemassage.com;
+      root /var/www/medbridge/httpdocs;
+
+      access_log            /var/log/nginx/medbridgemassage.com.access.log;
+      error_log             /var/log/nginx/medbridgemassage.com.error.log;
+
+      location / {
+        return 301 https://www.medbridgemassage.com$request_uri;
+      }
+    }
+
+  www.healthpathconnect.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           *.healthpathconnect.com;
+      root /var/www/medbridge/httpdocs;
+        index  index_hp.php;
+
+      access_log            /var/log/nginx/www.healthpathconnect.com.access.log;
+      error_log             syslog:server=unix:/dev/log;
+
+      location / {
+        rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+        root /var/www/medbridge/httpdocs;
+        try_files $uri $uri/ /index_hp.php;
+      }
+      location ~* \.(eot|otf|ttf|woff|woff2)$ {
+        add_header Access-Control-Allow-Origin *;
+        root  /var/www/medbridge/httpdocs;
+        index  index.html index.htm index.php;
+      }
+      location ~* \.php$ {
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 8 16k;
+        root  /var/www/medbridge/httpdocs;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass localhost:9000;
+        fastcgi_index index_hp.php;
+        fastcgi_param PHP_VALUE "newrelic.appname=healthpathconnect.com";
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+      }
+    }
+
+  www.healthpatheducation.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           *.healthpatheducation.com;
+      root /var/www/medbridge/httpdocs;
+        index  index_hp.php;
+
+      access_log            /var/log/nginx/www.healthpatheducation.com.access.log;
+      error_log             syslog:server=unix:/dev/log;
+
+      location / {
+        rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+        root /var/www/medbridge/httpdocs;
+        try_files $uri $uri/ /index_hp.php;
+      }
+      location ~* \.(eot|otf|ttf|woff|woff2)$ {
+        add_header Access-Control-Allow-Origin *;
+        root  /var/www/medbridge/httpdocs;
+        index  index.html index.htm index.php;
+      }
+      location ~* \.php$ {
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 8 16k;
+        root  /var/www/medbridge/httpdocs;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass localhost:9000;
+        fastcgi_index index_hp.php;
+        fastcgi_param PHP_VALUE "newrelic.appname=healthpatheducation.com";
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+      }
+    }
+
+  www.medbridgeconnect.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           *.medbridgeconnect.com;
+      root /var/www/medbridge/httpdocs;
+        index  index_prod.php;
+
+      access_log            /var/log/nginx/www.medbridgeconnect.com.access.log;
+      error_log             syslog:server=unix:/dev/log;
+
+      location ^~ /style/ {
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass          http://159.203.220.147/;
+        proxy_read_timeout  90;
+      }
+      location / {
+        rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+        root /var/www/medbridge/httpdocs;
+        try_files $uri $uri/ /index_prod.php;
+      }
+      location ~* \.(eot|otf|ttf|woff|woff2)$ {
+        add_header Access-Control-Allow-Origin *;
+        root  /var/www/medbridge/httpdocs;
+        index  index.html index.htm index.php;
+      }
+      location ~* \.php$ {
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 8 16k;
+        root  /var/www/medbridge/httpdocs;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass localhost:9000;
+        fastcgi_index index_prod.php;
+        fastcgi_param PHP_VALUE "newrelic.appname=medbridgeconnect.com";
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+      }
+    }
+
+  www.medbridgeeducation.com.conf: |
+    server {
+      listen                *:80 default_server;
+
+      server_name           *.medbridgeeducation.com;
+      root /var/www/medbridge/httpdocs;
+        index  index_prod.php;
+
+      access_log            /var/log/nginx/www.medbridgeeducation.com.access.log;
+      error_log             syslog:server=unix:/dev/log;
+
+      location ^~ /blog/ {
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass          http://159.203.109.231/blog/;
+        proxy_read_timeout  90;
+      }
+      location ^~ /style/ {
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass          http://159.203.220.147/;
+        proxy_read_timeout  90;
+      }
+      location / {
+        rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+        root /var/www/medbridge/httpdocs;
+        try_files $uri $uri/ /index_prod.php;
+      }
+      location ~* \.(eot|otf|ttf|woff|woff2)$ {
+        add_header Access-Control-Allow-Origin *;
+        root  /var/www/medbridge/httpdocs;
+        index  index.html index.htm index.php;
+      }
+      location ~* \.php$ {
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 8 16k;
+        root  /var/www/medbridge/httpdocs;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass localhost:9000;
+        fastcgi_index index_prod.php;
+        fastcgi_param PHP_VALUE "newrelic.appname=medbridgeeducation.com";
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+      }
+      
+    }
+
+  www.medbridge.io.conf: |
+    server {
+        listen                *:80 default_server;
+
+        server_name           *.medbridge.io;
+        root /var/www/medbridge/httpdocs;
+          index  index_prod.php;
+
+        access_log            /var/log/nginx/www.medbridge.io.access.log;
+        error_log             syslog:server=unix:/dev/log;
+
+        location ^~ /blog/ {
+          proxy_redirect off;
+          proxy_set_header Host $host;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_pass          http://159.203.109.231/blog/;
+          proxy_read_timeout  90;
+        }
+        location ^~ /style/ {
+          proxy_redirect off;
+          proxy_set_header Host $host;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_pass          http://159.203.220.147/;
+          proxy_read_timeout  90;
+        }
+        location / {
+          rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+          root /var/www/medbridge/httpdocs;
+          try_files $uri $uri/ /index_prod.php;
+        }
+        location ~* \.(eot|otf|ttf|woff|woff2)$ {
+          add_header Access-Control-Allow-Origin *;
+          root  /var/www/medbridge/httpdocs;
+          index  index.html index.htm index.php;
+        }
+        location ~* \.php$ {
+          fastcgi_buffer_size 32k;
+          fastcgi_buffers 8 16k;
+          root  /var/www/medbridge/httpdocs;
+          include /etc/nginx/fastcgi_params;
+          fastcgi_pass localhost:9000;
+          fastcgi_index index_prod.php;
+          fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+          fastcgi_split_path_info ^(.+\.php)(.*)$;
+        }
+
+      }
+
+  www.medbridgego.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           *.medbridgego.com;
+      root /var/www/medbridge/httpdocs;
+        index  index_prod.php;
+
+      access_log            /var/log/nginx/www.medbridgego.com.access.log;
+      error_log             syslog:server=unix:/dev/log;
+
+      location ^~ /style/ {
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass          http://159.203.220.147/;
+        proxy_read_timeout  90;
+      }
+      location / {
+        rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+        root /var/www/medbridge/httpdocs;
+        try_files $uri $uri/ /index_prod.php;
+      }
+      location ~* \.(eot|otf|ttf|woff|woff2)$ {
+        add_header Access-Control-Allow-Origin *;
+        root  /var/www/medbridge/httpdocs;
+        index  index.html index.htm index.php;
+      }
+      location ~* \.php$ {
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 8 16k;
+        root  /var/www/medbridge/httpdocs;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass localhost:9000;
+        fastcgi_index index_prod.php;
+        fastcgi_param PHP_VALUE "newrelic.appname=medbridgego.com";
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+      }
+    }
+
+  www.medbridgemassage.com.conf: |
+    server {
+      listen                *:80;
+
+      server_name           *.medbridgemassage.com;
+      root /var/www/medbridge/httpdocs;
+        index  index_massage.php;
+
+      access_log            /var/log/nginx/www.medbridgemassage.com.access.log;
+      error_log             syslog:server=unix:/dev/log;
+
+      location ^~ /style/ {
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass          http://159.203.220.147/;
+        proxy_read_timeout  90;
+      }
+      location / {
+        rewrite "^/(.*)\.[\d]{10}\.(css|js)$" /$1.$2 break;
+        root /var/www/medbridge/httpdocs;
+        try_files $uri $uri/ /index_massage.php;
+      }
+      location ~* \.(eot|otf|ttf|woff|woff2)$ {
+        add_header Access-Control-Allow-Origin *;
+        root  /var/www/medbridge/httpdocs;
+        index  index.html index.htm index.php;
+      }
+      location ~* \.php$ {
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 8 16k;
+        root  /var/www/medbridge/httpdocs;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass localhost:9000;
+        fastcgi_index index_massage.php;
+        fastcgi_param PHP_VALUE "newrelic.appname=medbridgemassage.com";
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+      }
+    }
