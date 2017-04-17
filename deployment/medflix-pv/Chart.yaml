@@ -1,4 +1,0 @@
-apiVersion: v1
-description: A Kubernetes Helm Chart
-name: medflix-pv
-version: 0.1.0

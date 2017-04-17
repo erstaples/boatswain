@@ -1,4 +1,0 @@
-apiVersion: v1
-description: Installation of the Medbridge Hierarchy app with an in-cluster neo4j database store
-name: hierarchy
-version: 0.3.1

@@ -1,4 +1,0 @@
-apiVersion: v1
-description: Sets up the course_recommendations database service
-name: medflix-db
-version: 0.1.0

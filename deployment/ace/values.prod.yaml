@@ -1,7 +1,0 @@
-Logging: true
-
-nginx:
-  imageTag: "1b1d513"
-
-phpfpm:
-  imageTag: "1b1d513"
