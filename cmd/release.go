@@ -34,6 +34,7 @@ var ns string
 var packfile string
 var xdebug bool
 var noExecute bool
+var packageIDOverride string
 
 type Config struct {
 	ReleasePath string
@@ -65,8 +66,8 @@ var releaseCmd = &cobra.Command{
 		releaseName := args[0]
 
 		var xdebugHost string
-		var packageId string
 		var fullReleaseName string
+		var packageId string
 
 		environments := []string{"development", "dev", "staging", "stage", "production", "prod"}
 
@@ -100,6 +101,10 @@ var releaseCmd = &cobra.Command{
 		default:
 			fmt.Println("Invalid environment: " + env)
 			os.Exit(1)
+		}
+
+		if len(packageIDOverride) > 0 {
+			packageId = packageIDOverride
 		}
 
 		fullReleaseName = packageId + "-" + releaseName
@@ -147,6 +152,7 @@ func init() {
 	releaseCmd.Flags().StringVarP(&packfile, "packfile", "p", "", "The values yaml file to use")
 	releaseCmd.Flags().BoolVarP(&xdebug, "xdebug", "x", false, "Enables xdebug (for dev environments only)")
 	releaseCmd.Flags().BoolVar(&noExecute, "no-execute", false, "Echoes helm upgrade command, but does not execute")
+	releaseCmd.Flags().StringVar(&packageIDOverride, "packageid", "", "Package ID. Overrides default set based on environment")
 }
 
 func getK8sCurrContext() ([]byte, error) {
