@@ -61,7 +61,7 @@ func execGenSecretCmd(filePath string) {
 		"create", "secret", "generic",
 		"awsecr-creds",
 		"--from-literal=AWS_ACCESS_KEY_ID=" + creds[0],
-		"--from-literal=AWS_SECRET_ACCSS_KEY=" + creds[1],
+		"--from-literal=AWS_SECRET_ACCESS_KEY=" + creds[1],
 		"--from-literal=aws-account=" + awsAccount}
 	out, _ := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	fmt.Printf("%s", out)
