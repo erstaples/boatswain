@@ -15,7 +15,9 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -193,11 +195,17 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmdString := strings.Join(cmd.Args, " ")
 	echoGoodMessage(cmdString)
+	confirm := true
 
 	if !noExecute {
-		fmt.Printf("\n%s\n", msg)
-		out, _ := cmd.CombinedOutput()
-		fmt.Printf("%s", out)
+		if env == "production" && !dryrun {
+			confirm = askForConfirmation(fullReleaseName)
+		}
+		if confirm {
+			fmt.Printf("\n%s\n", msg)
+			out, _ := cmd.CombinedOutput()
+			fmt.Printf("%s", out)
+		}
 	}
 }
 
@@ -219,4 +227,26 @@ func echoWarningMessage(msg string) {
 
 func echoGoodMessage(msg string) {
 	fmt.Printf("%s%s%s", colorGreen, msg, colorNone)
+}
+
+func askForConfirmation(appName string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Println("")
+		echoWarningMessage("Do you really want to deploy `" + appName + "` to production? [y/n]: ")
+
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
+	}
 }
