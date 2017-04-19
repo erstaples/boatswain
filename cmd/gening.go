@@ -49,31 +49,38 @@ var geningCmd = &cobra.Command{
 			fmt.Println("Missing argument: host")
 		}
 		host := args[0]
+		var ingress Ingress
 
-		secretName := "tls-" + host
-		fmt.Println(secretName)
+		if enableTLS {
+			secretName := "tls-" + host
+			fmt.Println(secretName)
 
-		cmdName := "openssl"
-		cmdArgs := []string{
-			"req", "-x509",
-			"-sha256", "-nodes", "-newkey", "rsa:4096",
-			"-keyout", "tls.key",
-			"-out", "tls.crt",
-			"-days", "365",
-			"-subj", "/CN=" + host}
+			cmdName := "openssl"
+			cmdArgs := []string{
+				"req", "-x509",
+				"-sha256", "-nodes", "-newkey", "rsa:4096",
+				"-keyout", "tls.key",
+				"-out", "tls.crt",
+				"-days", "365",
+				"-subj", "/CN=" + host}
 
-		out, _ := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+			out, _ := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 
-		fmt.Printf("%s", out)
+			fmt.Printf("%s", out)
 
-		cmdName = "kubectl"
-		cmdArgs = []string{
-			"create", "secret", "tls", secretName, "--cert=./tls.crt", "--key=./tls.key"}
-		out, _ = exec.Command(cmdName, cmdArgs...).CombinedOutput()
+			cmdName = "kubectl"
+			cmdArgs = []string{
+				"create", "secret", "tls", secretName, "--cert=./tls.crt", "--key=./tls.key"}
+			out, _ = exec.Command(cmdName, cmdArgs...).CombinedOutput()
 
-		fmt.Printf("%s", out)
+			fmt.Printf("%s", out)
+			os.Remove("tls.crt")
+			os.Remove("tls.key")
 
-		ingress := Ingress{HostName: host, ServiceName: service, ServicePort: servicePort, SecretName: secretName}
+			ingress = Ingress{HostName: host, ServiceName: service, ServicePort: servicePort, SecretName: secretName}
+		} else {
+			ingress = Ingress{HostName: host, ServiceName: service, ServicePort: servicePort}
+		}
 
 		var k8smanifest string
 		if enableTLS {
@@ -92,11 +99,8 @@ var geningCmd = &cobra.Command{
 
 		}()
 
-		out, _ = ingCmd.CombinedOutput()
+		out, _ := ingCmd.CombinedOutput()
 		fmt.Printf("%s", out)
-
-		os.Remove("tls.crt")
-		os.Remove("tls.key")
 	},
 }
 
