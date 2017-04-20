@@ -37,6 +37,7 @@ var packfile string
 var xdebug bool
 var noExecute bool
 var packageIDOverride string
+var optSetValues string
 
 type Config struct {
 	ReleasePath string
@@ -155,6 +156,7 @@ func init() {
 	releaseCmd.Flags().BoolVarP(&xdebug, "xdebug", "x", false, "Enables xdebug (for dev environments only)")
 	releaseCmd.Flags().BoolVar(&noExecute, "no-execute", false, "Echoes helm upgrade command, but does not execute")
 	releaseCmd.Flags().StringVar(&packageIDOverride, "packageid", "", "Package ID. Overrides default set based on environment")
+	releaseCmd.Flags().StringVar(&optSetValues, "set", "", "(From Helm) set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 }
 
 func getK8sCurrContext() ([]byte, error) {
@@ -183,9 +185,15 @@ func useK8sCurrContext(context string) ([]byte, error) {
 
 func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string, packfile string, ns string) {
 	msg := "Running helm upgrade"
+
+	fullSetValues := setValues
+	if len(optSetValues) > 0 {
+		fullSetValues += "," + optSetValues
+	}
+
 	cmdName := "helm"
 	cmdArgs := []string{
-		"upgrade", fullReleaseName, "--install", appPath, "--set", setValues, "--values", packfile, "--namespace", ns}
+		"upgrade", fullReleaseName, "--install", appPath, "--set", fullSetValues, "--values", packfile, "--namespace", ns}
 
 	if dryrun {
 		cmdArgs = append(cmdArgs, "--dry-run", "--debug")
