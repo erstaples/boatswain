@@ -192,10 +192,16 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 	}
 
 	releasePath := viper.GetString("ReleasePath")
-	globalValues := releasePath + "/.global/values.yaml"
-	globalEnvValues := releasePath + "/.global/" + packfile
 
-	fullPackFiles := packfileFullPath + "," + globalValues + "," + globalEnvValues
+	var fullPackFiles string
+
+	if pathExists(releasePath + "/.global") {
+		globalValues := releasePath + "/.global/values.yaml"
+		globalEnvValues := releasePath + "/.global/" + packfile
+		fullPackFiles = packfileFullPath + "," + globalValues + "," + globalEnvValues
+	} else {
+		fullPackFiles = packfileFullPath
+	}
 
 	cmdName := "helm"
 	cmdArgs := []string{
