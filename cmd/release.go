@@ -139,9 +139,9 @@ var releaseCmd = &cobra.Command{
 		}
 
 		//fully qualified path
-		packfile = appPath + "/" + packfile
+		packfileFullPath := appPath + "/" + packfile
 
-		execHelmUpgradeCmd(fullReleaseName, appPath, setValues, packfile, ns)
+		execHelmUpgradeCmd(fullReleaseName, appPath, setValues, packfileFullPath, packfile, ns)
 	},
 }
 
@@ -183,7 +183,7 @@ func useK8sCurrContext(context string) ([]byte, error) {
 	return cmdOut, err
 }
 
-func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string, packfile string, ns string) {
+func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string, packfileFullPath string, packfile string, ns string) {
 	msg := "Running helm upgrade"
 
 	fullSetValues := setValues
@@ -191,9 +191,15 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 		fullSetValues += "," + optSetValues
 	}
 
+	releasePath := viper.GetString("ReleasePath")
+	globalValues := releasePath + "/.global/values.yaml"
+	globalEnvValues := releasePath + "/.global/" + packfile
+
+	fullPackFiles := packfileFullPath + "," + globalValues + "," + globalEnvValues
+
 	cmdName := "helm"
 	cmdArgs := []string{
-		"upgrade", fullReleaseName, "--install", appPath, "--set", fullSetValues, "--values", packfile, "--namespace", ns}
+		"upgrade", fullReleaseName, "--install", appPath, "--set", fullSetValues, "--values", fullPackFiles, "--namespace", ns}
 
 	if dryrun {
 		cmdArgs = append(cmdArgs, "--dry-run", "--debug")
