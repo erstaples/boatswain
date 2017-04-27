@@ -193,11 +193,17 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 
 	cmdName := "helm"
 	cmdArgs := []string{
-		"upgrade", fullReleaseName, "--install", appPath, "--set", fullSetValues, "--values", packfile, "--namespace", ns}
+		"upgrade", fullReleaseName, "--install", appPath, "--set", fullSetValues, "--namespace", ns}
 
 	if dryrun {
 		cmdArgs = append(cmdArgs, "--dry-run", "--debug")
 		msg += " (dry run)"
+	}
+
+	if pathExists(packfile) {
+		cmdArgs = append(cmdArgs, "--values", packfile)
+	} else {
+		echoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only")
 	}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
