@@ -212,6 +212,12 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 		msg += " (dry run)"
 	}
 
+	if pathExists(packfile) {
+		cmdArgs = append(cmdArgs, "--values", packfile)
+	} else {
+		echoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only")
+	}
+
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmdString := strings.Join(cmd.Args, " ")
 	echoGoodMessage(cmdString)
