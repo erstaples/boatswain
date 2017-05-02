@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Version represents the app version. Used in `boatswain version` command
+var Version = "v1.0.0"
 var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands

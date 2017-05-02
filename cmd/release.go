@@ -139,9 +139,9 @@ var releaseCmd = &cobra.Command{
 		}
 
 		//fully qualified path
-		packfile = appPath + "/" + packfile
+		packfileFullPath := appPath + "/" + packfile
 
-		execHelmUpgradeCmd(fullReleaseName, appPath, setValues, packfile, ns)
+		execHelmUpgradeCmd(fullReleaseName, appPath, setValues, packfileFullPath, packfile, ns)
 	},
 }
 
@@ -183,12 +183,42 @@ func useK8sCurrContext(context string) ([]byte, error) {
 	return cmdOut, err
 }
 
-func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string, packfile string, ns string) {
+func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string, packfileFullPath string, packfile string, ns string) {
 	msg := "Running helm upgrade"
 
 	fullSetValues := setValues
 	if len(optSetValues) > 0 {
 		fullSetValues += "," + optSetValues
+	}
+
+	releasePath := viper.GetString("ReleasePath")
+	globalPath := releasePath + "/.global/"
+	globalValuesPath := globalPath + "values.yaml"
+	globalValuesEnvPath := globalPath + packfile
+
+	var fullPackFiles string
+
+	//precedence should go like this:
+	//values.env.yaml, .global/values.yaml, .global/values.env.yaml
+	//right values files override left
+	if pathExists(packfileFullPath) {
+		fullPackFiles = packfileFullPath
+	} else {
+		echoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only\n")
+	}
+
+	if pathExists(globalPath) {
+
+		if len(fullPackFiles) > 0 {
+			fullPackFiles += ","
+		}
+
+		fullPackFiles += globalValuesPath
+
+		if pathExists(globalValuesEnvPath) {
+			fullPackFiles += "," + globalValuesEnvPath
+		}
+
 	}
 
 	cmdName := "helm"
@@ -200,10 +230,8 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 		msg += " (dry run)"
 	}
 
-	if pathExists(packfile) {
-		cmdArgs = append(cmdArgs, "--values", packfile)
-	} else {
-		echoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only")
+	if len(fullPackFiles) > 0 {
+		cmdArgs = append(cmdArgs, "--values", fullPackFiles)
 	}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
