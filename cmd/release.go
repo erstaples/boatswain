@@ -192,30 +192,46 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 	}
 
 	releasePath := viper.GetString("ReleasePath")
+	globalPath := releasePath + "/.global/"
+	globalValuesPath := globalPath + "values.yaml"
+	globalValuesEnvPath := globalPath + packfile
 
 	var fullPackFiles string
 
-	if pathExists(releasePath + "/.global") {
-		globalValues := releasePath + "/.global/values.yaml"
-		globalEnvValues := releasePath + "/.global/" + packfile
-		fullPackFiles = packfileFullPath + "," + globalValues + "," + globalEnvValues
-	} else {
+	//precedence should go like this:
+	//values.env.yaml, .global/values.yaml, .global/values.env.yaml
+	//right values files override left
+	if pathExists(packfileFullPath) {
 		fullPackFiles = packfileFullPath
+	} else {
+		echoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only\n")
+	}
+
+	if pathExists(globalPath) {
+
+		if len(fullPackFiles) > 0 {
+			fullPackFiles += ","
+		}
+
+		fullPackFiles += globalValuesPath
+
+		if pathExists(globalValuesEnvPath) {
+			fullPackFiles += "," + globalValuesEnvPath
+		}
+
 	}
 
 	cmdName := "helm"
 	cmdArgs := []string{
-		"upgrade", fullReleaseName, "--install", appPath, "--set", fullSetValues, "--values", fullPackFiles, "--namespace", ns}
+		"upgrade", fullReleaseName, "--install", appPath, "--set", fullSetValues, "--namespace", ns}
 
 	if dryrun {
 		cmdArgs = append(cmdArgs, "--dry-run", "--debug")
 		msg += " (dry run)"
 	}
 
-	if pathExists(packfile) {
-		cmdArgs = append(cmdArgs, "--values", packfile)
-	} else {
-		echoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only")
+	if len(fullPackFiles) > 0 {
+		cmdArgs = append(cmdArgs, "--values", fullPackFiles)
 	}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
