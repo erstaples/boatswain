@@ -180,10 +180,12 @@ metadata:
   creationTimestamp: null
   name: haproxy-config
   selfLink: /api/v1/namespaces//configmaps/haproxy-config
+  namespace: stackpoint-system
 ---
 apiVersion: extensions/v1beta1
 kind: ReplicaSet
 metadata:
+  namespace: stackpoint-system
   annotations:
     deployment.kubernetes.io/desired-replicas: "1"
     deployment.kubernetes.io/max-replicas: "2"
@@ -256,6 +258,7 @@ metadata:
   creationTimestamp: null
   name: spc-balancer
   selfLink: /api/v1/namespaces//services/spc-balancer
+  namespace: stackpoint-system
 spec:
   ports:
   - name: http
