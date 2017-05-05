@@ -92,4 +92,5 @@ func genConfig() {
 	if err != nil {
 		panic(err)
 	}
+	initConfig()
 }
