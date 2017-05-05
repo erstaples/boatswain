@@ -32,16 +32,22 @@ var cfgFile string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "boatswain",
-	Short: "CLI utility to deploy MedBridge applications and services",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Utility to deploy MedBridge applications and services",
+	Long: `Provides a set of tools to deploy applications and services to a Kubernetes
+cluster. 
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+Boatswain does things like: 
+* generates ingresses on the fly
+* release helm packages bootstrapped with the right environment and context
+* provisions new AWS Kubernetes clusters with network policies and log aggregation
+
+
+It makes some assumptions about your environment, which might be refactored in the near future
+for portability:
+* You have helm and kubectl installed and in your path
+* You have a boatswain values repository
+* Your clusters use StackPointCloud HAProxy ingress controllers
+`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
