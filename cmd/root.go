@@ -38,7 +38,7 @@ cluster.
 
 Boatswain does things like: 
 * generates ingresses on the fly
-* release helm packages bootstrapped with the right environment and context
+* releases helm packages bootstrapped with the right environment and context
 * provisions new AWS Kubernetes clusters with network policies and log aggregation
 
 
