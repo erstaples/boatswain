@@ -20,7 +20,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -133,7 +135,10 @@ var releaseCmd = &cobra.Command{
 		fmt.Printf("Deploying: %s\n", appPath)
 
 		//build helm cmd
-		setValues := "environment=" + env + ",packageId=" + packageId
+		//add standard values to be made available in the helm releases
+		timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
+		fmt.Println(timestamp)
+		setValues := "environment=" + env + ",packageId=" + packageId + ",timestamp=" + timestamp
 		if xdebug {
 			setValues += ",xdebugHost=" + xdebugHost
 		}
