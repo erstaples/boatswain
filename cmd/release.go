@@ -137,7 +137,6 @@ var releaseCmd = &cobra.Command{
 		//build helm cmd
 		//add standard values to be made available in the helm releases
 		timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
-		fmt.Println(timestamp)
 		setValues := "environment=" + env + ",packageId=" + packageId + ",timestamp=" + timestamp
 		if xdebug {
 			setValues += ",xdebugHost=" + xdebugHost
