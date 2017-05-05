@@ -17,6 +17,7 @@ package cmd
 import (
 	"io"
 	"os/exec"
+	"strings"
 
 	"fmt"
 
@@ -37,19 +38,27 @@ var provisionCmd = &cobra.Command{
   * swaps in modified spc-balancer to work with calico networking
   * annotates default namespace to deny external traffic by default 
   * labels default and stackpoint-system namespaces with respective networkpolicy names
+  * installs Elasticsearch, Logstash, Kibana (ELK) stack
 
   IMPORTANT: Don't run this in a cluster taking production traffic.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		utils.EchoWarningMessage("Make sure this cluster is not taking production traffic")
+		fmt.Println("")
+
 		utils.DisplayK8sCurrContext()
-		resp := utils.AskForConfirmation("Are you sure you want to run provision?")
+		currContext := getCurrContext()
+
+		msg := "Are you sure you want to run provision in " + currContext + " context?"
+		resp := utils.AskForConfirmation(msg)
 		if resp == true {
 			deleteOldSPCBalancer()
 			createSPCBalancer()
 			annotateNS()
 			labelDefaultNS()
 			labelSPCNS()
+			releaseELKStack()
 		}
 
 	},
@@ -97,6 +106,28 @@ func execKubectlCmd(cmdArgs []string) {
 		fmt.Printf("There was an error: %s", err)
 	}
 	fmt.Printf("%s", out)
+}
+
+func releaseELKStack() {
+	currContext := getCurrContext()
+	cmd := "boatswain"
+	cmdArgs := []string{"release", "elk", "-e", currContext}
+	out, err := exec.Command(cmd, cmdArgs...).CombinedOutput()
+	if err != nil {
+		fmt.Printf("There was an error: %s", err)
+	}
+	fmt.Printf("%s", out)
+}
+
+func getCurrContext() string {
+	args := []string{"config", "current-context"}
+	currContext, err := exec.Command("kubectl", args...).CombinedOutput()
+	if err != nil {
+		panic(err)
+	}
+	currContextStr := string(currContext[:])
+	currContextStr = strings.TrimRight(currContextStr, "\r\n")
+	return currContextStr
 }
 
 var spcBalancer = `
