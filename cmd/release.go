@@ -15,20 +15,15 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
+	utils "github.com/medbridge/boatswain/utilities"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var colorNone = "\033[00m"
-var colorYellow = "\033[01;33m"
-var colorGreen = "\033[01;32m"
 
 var env string
 var dryrun bool
@@ -159,14 +154,6 @@ func init() {
 	releaseCmd.Flags().StringVar(&optSetValues, "set", "", "(From Helm) set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 }
 
-func getK8sCurrContext() ([]byte, error) {
-	cmdName := "kubectl"
-	cmdArgs := []string{"config", "current-context"}
-	cmdOut, err := exec.Command(cmdName, cmdArgs...).Output()
-	check(err)
-	return cmdOut, err
-}
-
 func getXDebugHost() ([]byte, error) {
 	cmdName := "ipconfig"
 	cmdArgs := []string{"getifaddr", "en0"}
@@ -204,7 +191,7 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 	if pathExists(packfileFullPath) {
 		fullPackFiles = packfileFullPath
 	} else {
-		echoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only\n")
+		utils.EchoWarningMessage(packfile + " does not exist. Running helm upgrade with values.yaml only\n")
 	}
 
 	if pathExists(globalPath) {
@@ -236,12 +223,12 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmdString := strings.Join(cmd.Args, " ")
-	echoGoodMessage(cmdString)
+	utils.EchoGoodMessage(cmdString)
 	confirm := true
 
 	if !noExecute {
 		if env == "production" && !dryrun {
-			confirm = askForConfirmation(fullReleaseName)
+			confirm = utils.AskForConfirmation(fullReleaseName)
 		}
 		if confirm {
 			fmt.Printf("\n%s\n", msg)
@@ -263,32 +250,6 @@ func pathExists(dirPath string) bool {
 
 }
 
-func echoWarningMessage(msg string) {
-	fmt.Printf("%s%s%s", colorYellow, msg, colorNone)
-}
-
-func echoGoodMessage(msg string) {
-	fmt.Printf("%s%s%s", colorGreen, msg, colorNone)
-}
-
-func askForConfirmation(appName string) bool {
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Println("")
-		echoWarningMessage("Do you really want to deploy `" + appName + "` to production? [y/n]: ")
-
-		response, err := reader.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		response = strings.ToLower(strings.TrimSpace(response))
-
-		if response == "y" || response == "yes" {
-			return true
-		} else if response == "n" || response == "no" {
-			return false
-		}
-	}
+func askForReleaseConfirmation(appName string) {
+	utils.AskForConfirmation("Do you really want to deploy `" + appName + "` to production? [y/n]: ")
 }

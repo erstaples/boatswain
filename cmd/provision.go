@@ -20,6 +20,7 @@ import (
 
 	"fmt"
 
+	utils "github.com/medbridge/boatswain/utilities"
 	"github.com/spf13/cobra"
 )
 
@@ -27,22 +28,40 @@ import (
 var provisionCmd = &cobra.Command{
 	Use:   "provision",
 	Short: "Provisions a new AWS k8s cluster",
-	Long: `Provisions a new AWS k8s cluster by doing the following:
-	* adds modified spc-balancer to work with calico networking
-	* enables networkpolicies in the default and stackpoint-system namespaces
+	Long: `
+  
+  Attempts to provision the following whether or not it's been done already (i.e. it's kinda dumb).
+  That being said, it's an idempotent command and you shouldn't run into any trouble accidently running it
+  on an already provisioned cluster (UNLESS THAT CLUSTER IS TAKING PRODUCTION TRAFFIC).
+
+  * swaps in modified spc-balancer to work with calico networking
+  * annotates default namespace to deny external traffic by default 
+  * labels default and stackpoint-system namespaces with respective networkpolicy names
+
+  IMPORTANT: Don't run this in a cluster taking production traffic.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		createSPCBalancer()
-		annotateNS()
-		labelDefaultNS()
-		labelSPCNS()
+		utils.DisplayK8sCurrContext()
+		resp := utils.AskForConfirmation("Are you sure you want to run provision?")
+		if resp == true {
+			deleteOldSPCBalancer()
+			createSPCBalancer()
+			annotateNS()
+			labelDefaultNS()
+			labelSPCNS()
+		}
 
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(provisionCmd)
+}
+
+func deleteOldSPCBalancer() {
+	cmdArgs := []string{"delete", "rs", "spc-balancer", "-n", "stackpoint-system"}
+	execKubectlCmd(cmdArgs)
 }
 
 func createSPCBalancer() {
