@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 NAME HERE eric@medbridgeed.com
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,11 +38,11 @@ type Ingress struct {
 
 // geningCmd represents the gening command
 var geningCmd = &cobra.Command{
-	Use:   "gening <hostname>",
+	Use:   "gening hostname",
 	Short: "Generate ingress",
 	Long: `Example:
 	
-	boatswain gening localmed.com`,
+	boatswain gening example.com`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
 		if len(args) == 0 {

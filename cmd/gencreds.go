@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 NAME HERE eric@medbridgeed.com
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,9 +26,11 @@ import (
 var filePath string
 
 var genCredsCmd = &cobra.Command{
-	Use:   "gencreds <accessKeyCsvFile>",
+	Use:   "gencreds path/to/accessKeys.csv",
 	Short: "Enable and configure awsecr-creds minikube addon",
-	Long: `Example:
+	Long: `Enables awsecr-creds for Minikube. Note: Works for Minikube versions up to v0.14.0
+	
+	Example:
 	
 	boatswain gencreds ~/Desktop/accessKeys.csv`,
 	Run: func(cmd *cobra.Command, args []string) {

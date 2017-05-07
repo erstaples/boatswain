@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 )
-
-//todo: move this to separate package
 
 var colorNone = "\033[00m"
 var colorYellow = "\033[01;33m"
@@ -43,14 +40,4 @@ func AskForConfirmation(msg string) bool {
 			return false
 		}
 	}
-}
-
-func DisplayK8sCurrContext() {
-	cmdName := "kubectl"
-	cmdArgs := []string{"config", "current-context"}
-	cmdOut, err := exec.Command(cmdName, cmdArgs...).Output()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Current context: %s", cmdOut)
 }
