@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 NAME HERE eric@medbridgeed.com
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ var cfgFile string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "boatswain",
-	Short: "Utility to deploy MedBridge applications and services",
+	Short: "Utility to deploy applications and services",
 	Long: `Provides a set of tools to deploy applications and services to a Kubernetes
 cluster. 
 
@@ -46,7 +46,6 @@ It makes some assumptions about your environment, which might be refactored in t
 for portability:
 * You have helm and kubectl installed and in your path
 * You have a boatswain values repository
-* Your clusters use StackPointCloud HAProxy ingress controllers
 `,
 }
 

@@ -159,14 +159,3 @@ spec:
 	s := doc.String()
 	return s, err
 }
-
-/**
-
-MATCHING_ROW=$(cat /etc/hosts | grep "^[0-9\.]*\s*${HOST_NAME}$")
-HAS_ROW=$?
-if [ $HAS_ROW -eq 1 ] && [ "$(kubectl config current-context)" == "minikube" ]; then
-echo "$(minikube ip)  ${HOST_NAME}" | sudo tee -a /etc/hosts
-echo "Your /etc/hosts file has been updated"
-fi
-
-**/
