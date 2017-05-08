@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"text/template"
 
 	"github.com/spf13/cobra"
@@ -30,6 +31,7 @@ var servicePort string
 var enableTLS bool
 
 type Ingress struct {
+	Name        string
 	HostName    string
 	ServiceName string
 	ServicePort string
@@ -82,6 +84,10 @@ var geningCmd = &cobra.Command{
 			ingress = Ingress{HostName: host, ServiceName: service, ServicePort: servicePort}
 		}
 
+		ingRegex, _ := regexp.Compile("\\*")
+		ingName := ingRegex.ReplaceAllString(host, "wildcard")
+		ingress.Name = ingName
+
 		var k8smanifest string
 		if enableTLS {
 			k8smanifest, _ = getHTTPSIngress(ingress)
@@ -118,10 +124,10 @@ func getHTTPIngress(ing Ingress) (string, error) {
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{.HostName}}
+  name: {{.Name}}
 spec:
   rules:
-  - host: {{.HostName}}
+  - host: "{{.HostName}}"
     http:
       paths:
       - backend:
@@ -139,10 +145,10 @@ func getHTTPSIngress(ing Ingress) (string, error) {
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{.HostName}}
+  name: {{.Name}}
 spec:
   rules:
-  - host: {{.HostName}}
+  - host: "{{.HostName}}"
     http:
       paths:
       - backend:
@@ -150,7 +156,7 @@ spec:
           servicePort: {{.ServicePort}}
   tls:
   - hosts:
-    - {{.HostName}}
+    - "{{.HostName}}"
     secretName: {{.SecretName}}
 `)
 	var doc bytes.Buffer
