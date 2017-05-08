@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 NAME HERE eric@medbridgeed.com
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ type Config struct {
 
 // releaseCmd represents the release command
 var releaseCmd = &cobra.Command{
-	Use:   "release <appName>",
+	Use:   "release appname",
 	Short: "Deploys application to minikube, staging, or production cluster",
 	Long: `Wraps around a helm install command to automate common helm configuration
 	options. Sets packageId, environment, and other important values.Execute
@@ -232,7 +232,7 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 
 	if !noExecute {
 		if env == "production" && !dryrun {
-			confirm = utils.AskForConfirmation(fullReleaseName)
+			confirm = askForReleaseConfirmation(fullReleaseName)
 		}
 		if confirm {
 			fmt.Printf("\n%s\n", msg)
@@ -254,6 +254,7 @@ func pathExists(dirPath string) bool {
 
 }
 
-func askForReleaseConfirmation(appName string) {
-	utils.AskForConfirmation("Do you really want to deploy `" + appName + "` to production? [y/n]: ")
+func askForReleaseConfirmation(appName string) bool {
+	msg := "Do you really want to deploy '" + appName + "' to production? [y/n]: "
+	return utils.AskForConfirmation(msg)
 }
