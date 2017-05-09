@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"text/template"
 
+	"github.com/medbridge/mocking/factories"
 	"github.com/spf13/cobra"
 )
 
@@ -29,6 +29,7 @@ var service string
 var servicePort string
 var enableTLS bool
 
+//Ingress Kubernetes ingress object
 type Ingress struct {
 	HostName    string
 	ServiceName string
@@ -37,65 +38,11 @@ type Ingress struct {
 	EnableTLS   bool
 }
 
+//GenIngressFlags wrapper for boatswain gening flags
 type GenIngressFlags struct {
 	Service     string
 	ServicePort string
 	EnableTLS   bool
-}
-
-type ICommandFactory interface {
-	Command(string, ...string) ICommand
-}
-
-type ICommand interface {
-	CombinedOutput() ([]byte, error)
-	StdinPipe() (io.WriteCloser, error)
-}
-
-type TestCommand struct {
-	Command []string
-}
-
-type TestStdInPipe struct {
-	Closed bool
-	Bytes  []byte
-}
-
-func (t *TestStdInPipe) Close() error {
-	t.Closed = true
-	return nil
-}
-
-func (t *TestStdInPipe) Write(p []byte) (int, error) {
-	t.Bytes = p
-	return 1, nil
-}
-
-func (e *TestCommand) CombinedOutput() ([]byte, error) {
-	return nil, nil
-}
-
-func (e *TestCommand) StdinPipe() (io.WriteCloser, error) {
-	var stub TestStdInPipe
-	return &stub, nil
-}
-
-type CommandTestFactory struct {
-	Commands [][]string
-}
-
-func (e *CommandTestFactory) Command(name string, arg ...string) ICommand {
-	cmdString := []string{name}
-	cmdString = append(cmdString, arg...)
-	e.Commands = append(e.Commands, cmdString)
-	cmd := TestCommand{Command: cmdString}
-	return &cmd
-}
-
-type CommandFactory struct{}
-
-func (e *CommandFactory) Command(name string, arg ...string) ICommand {
-	return exec.Command(name, arg...)
 }
 
 // geningCmd represents the gening command
@@ -106,14 +53,14 @@ var geningCmd = &cobra.Command{
 	
 	boatswain gening example.com`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmdFactory := &CommandFactory{}
+		cmdFactory := &factories.CommandFactory{}
 		flags := GenIngressFlags{Service: service, ServicePort: servicePort, EnableTLS: enableTLS}
 		RunGenIngress(args, cmdFactory, flags)
 	},
 }
 
 // RunGenIngress command for boatswain gening
-func RunGenIngress(args []string, cmdFactory ICommandFactory, cmdFlags GenIngressFlags) {
+func RunGenIngress(args []string, cmdFactory factories.ICommandFactory, cmdFlags GenIngressFlags) {
 	if len(args) == 0 {
 		fmt.Println("Missing argument: host")
 	}

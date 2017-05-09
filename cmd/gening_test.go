@@ -3,10 +3,12 @@ package cmd
 import (
 	"strings"
 	"testing"
+
+	"github.com/medbridge/mocking/factories"
 )
 
 func TestGenIng(t *testing.T) {
-	cmdFactory := &CommandTestFactory{}
+	cmdFactory := &factories.CommandTestFactory{}
 	cmdFlags := GenIngressFlags{Service: "test-service", ServicePort: "80", EnableTLS: false}
 	RunGenIngress([]string{"hostname"}, cmdFactory, cmdFlags)
 	if len(cmdFactory.Commands) != 1 {
@@ -20,7 +22,7 @@ func TestGenIng(t *testing.T) {
 }
 
 func TestGenIngTLS(t *testing.T) {
-	cmdFactory := &CommandTestFactory{}
+	cmdFactory := &factories.CommandTestFactory{}
 	cmdFlags := GenIngressFlags{Service: "test-service", ServicePort: "80", EnableTLS: true}
 	RunGenIngress([]string{"hostname"}, cmdFactory, cmdFlags)
 	if len(cmdFactory.Commands) != 3 {
