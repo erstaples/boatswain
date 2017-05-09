@@ -1,49 +1,49 @@
 package cmd
 
 import (
-	"os"
-	"os/exec"
+	"strings"
 	"testing"
-
-	"github.com/spf13/cobra"
 )
 
-func fakeExecCommand(command string, args ...string) *exec.Cmd {
-	cs := []string{"-test.run=TestHelperProcess", "--", command}
-	cs = append(cs, args...)
-	cmd := exec.Command(os.Args[0], cs...)
-	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
-	return cmd
+func TestGenIng(t *testing.T) {
+	cmdFactory := &CommandTestFactory{}
+	cmdFlags := GenIngressFlags{Service: "test-service", ServicePort: "80", EnableTLS: false}
+	RunGenIngress([]string{"hostname"}, cmdFactory, cmdFlags)
+	if len(cmdFactory.Commands) != 1 {
+		t.Error("Unexpected number of commands. Expected 1, got ", len(cmdFactory.Commands))
+	}
+	expected := []string{"kubectl", "apply", "-f", "-"}
+	actual := cmdFactory.Commands[0]
+	if expected[0] != actual[0] || expected[1] != actual[1] || expected[2] != actual[2] {
+		t.Errorf("Unexpected command. Expected %s, got %s", expected, actual)
+	}
 }
 
-//notes
-//t.Error, t.Fail, etc
-//gold standard, put test file right next to file being tested
-
-//go test -v -run Error
-//runs verbose matching regex "Error"
-//could also do -run ".*Error" to match any test that ends in name, e.g.
-
-// func TestGenIng(t *testing.T) {
-// 	execCommand = fakeExecCommand
-// 	defer func() { execCommand = exec.Command }()
-
-// 	out, err := RunDocker("docker/whalesay")
-// 	if err != nil {
-// 		t.Errorf("Expected nil error, got %#v", err)
-// 	}
-// 	if string(out) != dockerRunResult {
-// 		t.Errorf("Expected %q, got %q", dockerRunResult, out)
-// 	}
-// }
-
-func getCommand(t *testing.T, cmdName string) *cobra.Command {
-	cmd, _, err := RootCmd.Find([]string{cmdName})
-	if err != nil {
-		t.Error(err)
+func TestGenIngTLS(t *testing.T) {
+	cmdFactory := &CommandTestFactory{}
+	cmdFlags := GenIngressFlags{Service: "test-service", ServicePort: "80", EnableTLS: true}
+	RunGenIngress([]string{"hostname"}, cmdFactory, cmdFlags)
+	if len(cmdFactory.Commands) != 3 {
+		t.Error("Unexpected number of commands. Expected 3, got ", len(cmdFactory.Commands))
+		t.FailNow()
 	}
-	if cmd == nil {
-		t.Fatal("Command not found: ", cmdName)
+	actual := strings.Join(cmdFactory.Commands[0][:], " ")
+	expected := "openssl req -x509 -sha256 -nodes -newkey rsa:4096 -keyout tls.key -out tls.crt -days 365 -subj /CN=hostname"
+	if expected != actual {
+		t.Errorf("Incorrect command. Expected '%s', got '%s'", expected, actual)
 	}
-	return cmd
+
+	actual = strings.Join(cmdFactory.Commands[1][:], " ")
+	expected = "kubectl create secret tls tls-hostname --cert=./tls.crt --key=./tls.key"
+
+	if expected != actual {
+		t.Errorf("Incorrect command. Expected '%s', got '%s'", expected, actual)
+	}
+
+	actual = strings.Join(cmdFactory.Commands[2][:], " ")
+	expected = "kubectl apply -f -"
+
+	if expected != actual {
+		t.Errorf("Incorrect command. Expected '%s', got '%s'", expected, actual)
+	}
 }
