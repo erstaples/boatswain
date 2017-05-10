@@ -21,6 +21,7 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 var filePath string

@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"regexp"
 	"text/template"
 
 	"github.com/medbridge/mocking/factories"
@@ -31,6 +33,7 @@ var enableTLS bool
 
 //Ingress Kubernetes ingress object
 type Ingress struct {
+	Name        string
 	HostName    string
 	ServiceName string
 	ServicePort string
@@ -96,6 +99,8 @@ func RunGenIngress(args []string, cmdFactory factories.ICommandFactory, cmdFlags
 		ingress.SecretName = secretName
 	}
 
+	ingRegex, _ := regexp.Compile("\\*")
+	ingress.Name = ingRegex.ReplaceAllString(host, "wildcard")
 	k8smanifest, _ := getIngress(ingress)
 
 	ingCmd := cmdFactory.Command("kubectl", "apply", "-f", "-")
@@ -124,10 +129,10 @@ func getIngress(ing Ingress) (string, error) {
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{.HostName}}
+  name: {{.Name}}
 spec:
   rules:
-  - host: {{.HostName}}
+  - host: "{{.HostName}}"
     http:
       paths:
       - backend:
@@ -136,7 +141,7 @@ spec:
 {{ if .EnableTLS }}
   tls:
   - hosts:
-    - {{.HostName}}
+    - "{{.HostName}}"
     secretName: {{.SecretName}}
 {{ end }}
 `)

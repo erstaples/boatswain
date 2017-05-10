@@ -232,7 +232,7 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 
 	if !noExecute {
 		if env == "production" && !dryrun {
-			confirm = utils.AskForConfirmation(fullReleaseName)
+			confirm = askForReleaseConfirmation(fullReleaseName)
 		}
 		if confirm {
 			fmt.Printf("\n%s\n", msg)
@@ -254,6 +254,7 @@ func pathExists(dirPath string) bool {
 
 }
 
-func askForReleaseConfirmation(appName string) {
-	utils.AskForConfirmation("Do you really want to deploy `" + appName + "` to production? [y/n]: ")
+func askForReleaseConfirmation(appName string) bool {
+	msg := "Do you really want to deploy '" + appName + "' to production? [y/n]: "
+	return utils.AskForConfirmation(msg)
 }
