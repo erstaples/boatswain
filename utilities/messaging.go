@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-var colorNone = "\033[00m"
-var colorYellow = "\033[01;33m"
-var colorGreen = "\033[01;32m"
+var ColorNone = "\033[00m"
+var ColorYellow = "\033[01;33m"
+var ColorGreen = "\033[01;32m"
 
 func EchoWarningMessage(msg string) {
-	fmt.Printf("%s%s%s", colorYellow, msg, colorNone)
+	fmt.Printf("%s%s%s", ColorYellow, msg, ColorNone)
 }
 
 func EchoGoodMessage(msg string) {
-	fmt.Printf("%s%s%s", colorGreen, msg, colorNone)
+	fmt.Printf("%s%s%s", ColorGreen, msg, ColorNone)
 }
 
 func AskForConfirmation(msg string) bool {
