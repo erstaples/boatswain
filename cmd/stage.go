@@ -111,7 +111,7 @@ func RunStagePush(args []string) {
 		fmt.Printf("%s", yaml)
 		valuesPath := createValuesFile(build, config, domain, yaml)
 		runRelease(build, valuesPath, domain)
-		// genIngress(build, domain)
+		genIngress(build, domain)
 	}
 
 	/**
@@ -177,8 +177,6 @@ func runBuild(build Build, domain string) string {
 			fmt.Printf("build.sh | %s\n", scanner.Text())
 		}
 	}()
-
-	//TODO: use factory
 
 	err = cmd.Start()
 	if err != nil {

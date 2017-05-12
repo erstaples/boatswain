@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -175,7 +174,7 @@ func RunRelease(args []string, options ReleaseOptions) {
 	//build helm cmd
 	//add standard values to be made available in the helm releases
 	timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
-	setValues := "environment=" + options.Environment + ",packageId=" + packageId + ",timestamp='" + timestamp + "'"
+	setValues := "environment=" + options.Environment + ",packageId=" + packageId + ",timestamp=" + timestamp
 	if options.Xdebug {
 		setValues += ",xdebugHost=" + xdebugHost
 	}
@@ -262,40 +261,20 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 	fmt.Printf("boatswain | %s", cmdString)
 	confirm := true
 
-	//https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
-	cmdReader, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error creating StdoutPipe for Cmd", err)
-		os.Exit(1)
-	}
-
-	scanner := bufio.NewScanner(cmdReader)
-	go func() {
-		for scanner.Scan() {
-			fmt.Printf("helm | %s\n", scanner.Text())
-		}
-	}()
-
 	if !options.NoExecute {
 		if env == "production" && !dryrun {
 			confirm = askForReleaseConfirmation(fullReleaseName)
 		}
 		if confirm {
 			fmt.Printf("\n%s\n", msg)
-			//TODO: use factory
 
-			err = cmd.Start()
+			out, err := cmd.CombinedOutput()
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
-				os.Exit(1)
-			}
+				fmt.Printf("%s", err)
 
-			err = cmd.Wait()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Error waiting for Cmd", err)
-				os.Exit(1)
+			} else {
+				fmt.Printf("%s", out)
 			}
-
 		}
 	}
 }
