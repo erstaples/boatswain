@@ -256,10 +256,9 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 		cmdArgs = append(cmdArgs, "--values", fullPackFiles)
 	}
 
-	cmd := exec.Command(cmdName, cmdArgs...)
-	cmdString := strings.Join(cmd.Args, " ")
-	fmt.Printf("boatswain | %s", cmdString)
 	confirm := true
+	cmdString := strings.Join(cmdArgs, " ")
+	fmt.Printf("boatswain | %s", cmdString)
 
 	if !options.NoExecute {
 		if env == "production" && !dryrun {
@@ -267,16 +266,31 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 		}
 		if confirm {
 			fmt.Printf("\n%s\n", msg)
+			tries := 0
+			for tries < 3 {
+				tries++
+				//need to retry because it's failing randomly... not ideal and we should remove this loop
+				//the random failure is found
+				cmd := exec.Command(cmdName, cmdArgs...)
+				out, err := executeReleaseCmd(cmd)
+				if err != nil && tries == 3 {
+					fmt.Printf("%s", err)
+				}
 
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				fmt.Printf("%s", err)
+				if err == nil {
+					fmt.Printf("%s", out)
+					tries = 3
+				}
 
-			} else {
-				fmt.Printf("%s", out)
 			}
 		}
 	}
+}
+
+func executeReleaseCmd(cmd *exec.Cmd) ([]byte, error) {
+	out, err := cmd.CombinedOutput()
+
+	return out, err
 }
 
 func check(e error) {
