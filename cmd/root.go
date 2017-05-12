@@ -74,7 +74,7 @@ func init() {
 func initConfig() {
 	usr, err := user.Current()
 	homeDir := usr.HomeDir
-	cfgFile = homeDir + "/.boatswain.yaml"
+	cfgFile = homeDir + "/.boatswain-dev.yaml"
 	viper.SetConfigFile(cfgFile)
 	// If a config file is found, read it in.
 	if err = viper.ReadInConfig(); err == nil {
