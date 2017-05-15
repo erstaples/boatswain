@@ -1,4 +1,4 @@
-package cmd
+package lib
 
 import (
 	"io"
@@ -13,11 +13,10 @@ type Kubectl struct{}
 func (k *Kubectl) GetConfigMap() []byte {
 
 	name := "kubectl"
-	cmdArgs := []string{"get", "secret", cmName, "-o", "custom-columns=Config:" + cmColumnPath}
+	cmdArgs := []string{"get", "configmap", cmName, "-o", "custom-columns=Config:" + cmColumnPath}
 	cmd := exec.Command(name, cmdArgs...)
 
-	out, err := cmd.CombinedOutput()
-	k.checkError(err)
+	out, _ := cmd.CombinedOutput()
 
 	return out
 }

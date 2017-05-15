@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/medbridge/boatswain/lib"
 	"github.com/medbridge/boatswain/utilities"
 	"github.com/medbridge/mocking/factories"
 	"github.com/spf13/cobra"
@@ -41,7 +42,8 @@ var branchName string
 var serviceMapName string
 var serviceMapConfig ServiceMapConfig
 var serviceMap ServiceMap
-var configMapEntry StagingConfigMapEntry
+var configMapEntry lib.StagingConfigMapEntry
+var stagingConfigMap lib.StagingConfigMap
 
 var stagePushCmd = &cobra.Command{
 	Use:   "push [appnames] [domain]",
@@ -51,6 +53,13 @@ var stagePushCmd = &cobra.Command{
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		RunStagePush(args)
+		// stagingConfigMap.LoadConfigMap()
+		// configMapEntry.Name = "testing"
+		// configMapEntry.CloudFormationStack = "teststack"
+		// configMapEntry.HelmDeployments = []string{"deploy1", "deploy2"}
+		// configMapEntry.Ingress = "Testing"
+		// configMapEntry.AutogenConfigs = []string{"file1"}
+		// stagingConfigMap.AddConfig(configMapEntry)
 	},
 }
 
@@ -67,16 +76,9 @@ func RunStagePush(args []string) {
 	serviceMapName = args[0]
 	branchName = args[1]
 	loadServiceMap()
+	stagingConfigMap.LoadConfigMap()
 	configMapEntry.Name = branchName
 	configMapEntry.Ingress = branchName + ".k8staging.medbridgeeducation.com"
-
-	/**
-	Name                string   `yaml:"Name"`
-	HelmDeployments     []string `yaml:"HelmDeployments"`
-	Ingress             string   `yaml:"Ingress"`
-	AutogenConfigs      []string `yaml:"AutogenConfigs"`
-	CloudFormationStack string   `yaml:"CloudFormationStack"`
-	**/
 
 	config := Config{}
 	configPath := viper.ConfigFileUsed()
@@ -108,6 +110,8 @@ func RunStagePush(args []string) {
 		runRelease(build, valuesPath)
 		genIngress(build)
 	}
+
+	stagingConfigMap.AddConfig(configMapEntry)
 }
 
 func runBuild(build Build) string {

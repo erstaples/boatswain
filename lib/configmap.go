@@ -1,8 +1,10 @@
-package cmd
+package lib
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -21,6 +23,11 @@ type StagingConfigMapEntry struct {
 
 //RenderTemplate returns a ConfigMap object string
 func (m *StagingConfigMap) RenderTemplate() string {
+	/**
+	  This template is fairly fragile in terms of indentations. If you need to
+	  edit this, make sure it outputs a properly-formatted yaml string. And make sure
+	  new columns are indented with spaces, not tabs
+	  **/
 	tmpl, err := template.New("configmap").Parse(`
 apiVersion: v1
 kind: ConfigMap
@@ -30,22 +37,23 @@ data:
   config: |
   {{- range .Config }}
     - Name: {{ .Name }}
-	  HelmDeployments:
+      HelmDeployments:
 	    {{- range .HelmDeployments }}
         - {{ . }}
-		{{- end }}
-	  AutogenConfigs:
-	    {{-range .AutogenConfigs }}
+			{{- end }}
+      AutogenConfigs:
+	    {{- range .AutogenConfigs }}
         - {{ . }}
-		{{- end }}
-	  Ingress: {{ .Ingress }}
-	  CloudFormationStack: {{ .CloudFormationStack }}
+			{{- end }}
+      Ingress: {{ .Ingress }}
+      CloudFormationStack: {{ .CloudFormationStack }}
   {{- end }}
 `)
 
 	var doc bytes.Buffer
 	err = tmpl.Execute(&doc, m)
 	s := doc.String()
+	fmt.Printf("%s", s)
 
 	if err != nil {
 		panic(err)
@@ -57,10 +65,12 @@ data:
 func (m *StagingConfigMap) LoadConfigMap() {
 	var k Kubectl
 	out := k.GetConfigMap()
+	//the column header won't have the colon, which we need to unmarshal, so add it here
+	out = []byte(strings.Replace(string(out), "Config", "Config:", 1))
 	yaml.Unmarshal(out, &m)
 }
 
-//AddConfig appends a new StagingConfigMapEntry object to config list
+//AddConfig appends a new StagingConfigMapEntry object to config list. If the entry with the same name exists, it replaces the existing entry
 func (m *StagingConfigMap) AddConfig(c StagingConfigMapEntry) {
 	found := false
 	for i, entry := range m.Config {
