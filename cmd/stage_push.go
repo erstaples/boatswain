@@ -81,7 +81,7 @@ func RunStagePush(args []string) {
 	selectedBuilds := getSelectedBuilds(config)
 
 	for _, build := range selectedBuilds {
-		fmt.Printf("\n running build %s", build)
+		fmt.Printf("\n Running build %s", build)
 		imageTag := runBuild(build)
 
 		env := convertMapToEnvVars(serviceMap)

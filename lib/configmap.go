@@ -110,7 +110,7 @@ func (m *StagingConfigMap) Delete(name string) {
 
 	for i, entry := range m.Config {
 		if entry.Name == name {
-			m.Config = append(m.Config[:i], m.Config[i:]...)
+			m.Config = append(m.Config[:i], m.Config[i+1:]...)
 		}
 	}
 

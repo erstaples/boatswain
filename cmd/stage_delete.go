@@ -50,6 +50,7 @@ func RunStageDelete(args []string) {
 
 	if entry == nil {
 		fmt.Println("\nStaging release not found")
+		return
 	}
 
 	//helm deletes
