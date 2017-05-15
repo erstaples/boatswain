@@ -41,6 +41,7 @@ var branchName string
 var serviceMapName string
 var serviceMapConfig ServiceMapConfig
 var serviceMap ServiceMap
+var configMapEntry StagingConfigMapEntry
 
 var stagePushCmd = &cobra.Command{
 	Use:   "push [appnames] [domain]",
@@ -66,6 +67,16 @@ func RunStagePush(args []string) {
 	serviceMapName = args[0]
 	branchName = args[1]
 	loadServiceMap()
+	configMapEntry.Name = branchName
+	configMapEntry.Ingress = branchName + ".k8staging.medbridgeeducation.com"
+
+	/**
+	Name                string   `yaml:"Name"`
+	HelmDeployments     []string `yaml:"HelmDeployments"`
+	Ingress             string   `yaml:"Ingress"`
+	AutogenConfigs      []string `yaml:"AutogenConfigs"`
+	CloudFormationStack string   `yaml:"CloudFormationStack"`
+	**/
 
 	config := Config{}
 	configPath := viper.ConfigFileUsed()
@@ -131,6 +142,7 @@ func runRelease(build Build, valuesFile string) {
 		PackageIDOverride: branchName,
 	}
 	RunRelease(args, options)
+	configMapEntry.HelmDeployments = append(configMapEntry.HelmDeployments, branchName+"-"+build.Name)
 }
 
 func getGitCommitSha(build Build) []byte {
@@ -196,6 +208,7 @@ func createValuesFile(build Build, config Config, yaml string) string {
 	if err != nil {
 		panic(err)
 	}
+	configMapEntry.AutogenConfigs = append(configMapEntry.AutogenConfigs, fileName)
 	return valuesPath
 }
 
@@ -293,8 +306,9 @@ func loadCloudFormationTemplate(cf string, yamlBytes []byte) map[string]string {
 	templateBody := string(yamlBytes)
 	stackName := cf + "-" + branchName
 	cloudFormationValues := make(map[string]string)
+	configMapEntry.CloudFormationStack = stackName
 
-	params := &cloudformation.CreateStackInput{
+	createStackParams := &cloudformation.CreateStackInput{
 		StackName:    aws.String(stackName),
 		TemplateBody: aws.String(templateBody),
 	}
@@ -303,7 +317,7 @@ func loadCloudFormationTemplate(cf string, yamlBytes []byte) map[string]string {
 		StackName: aws.String(stackName),
 	}
 
-	out, err := svc.CreateStack(params)
+	out, err := svc.CreateStack(createStackParams)
 	if err != nil {
 		if strings.Contains(err.Error(), "AlreadyExistsException") {
 			fmt.Printf("\nCloudFormation stack [%s] already exists. Skipping...", cf)
