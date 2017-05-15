@@ -53,13 +53,6 @@ var stagePushCmd = &cobra.Command{
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		RunStagePush(args)
-		// stagingConfigMap.LoadConfigMap()
-		// configMapEntry.Name = "testing"
-		// configMapEntry.CloudFormationStack = "teststack"
-		// configMapEntry.HelmDeployments = []string{"deploy1", "deploy2"}
-		// configMapEntry.Ingress = "Testing"
-		// configMapEntry.AutogenConfigs = []string{"file1"}
-		// stagingConfigMap.AddConfig(configMapEntry)
 	},
 }
 
@@ -146,7 +139,7 @@ func runRelease(build Build, valuesFile string) {
 		PackageIDOverride: branchName,
 	}
 	RunRelease(args, options)
-	configMapEntry.HelmDeployments = append(configMapEntry.HelmDeployments, branchName+"-"+build.Name)
+	configMapEntry.HelmDeployments = append(configMapEntry.HelmDeployments, build.Name)
 }
 
 func getGitCommitSha(build Build) []byte {
@@ -212,7 +205,6 @@ func createValuesFile(build Build, config Config, yaml string) string {
 	if err != nil {
 		panic(err)
 	}
-	configMapEntry.AutogenConfigs = append(configMapEntry.AutogenConfigs, fileName)
 	return valuesPath
 }
 
