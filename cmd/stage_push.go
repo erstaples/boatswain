@@ -25,11 +25,6 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"time"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/medbridge/boatswain/lib"
 	"github.com/medbridge/boatswain/utilities"
 	"github.com/medbridge/mocking/factories"
@@ -79,10 +74,12 @@ func RunStagePush(args []string) {
 	yaml.Unmarshal(yamlFile, &config)
 
 	selectedBuilds := getSelectedBuilds(config)
-	cfValues := make(map[string]string)
+	var cfTemplate *lib.CloudFormationTemplate
 
 	if len(serviceMap.CloudFormationTemplate) > 0 {
-		cfValues = readCloudFormationTemplate()
+		cfTemplate = lib.NewCloudFormationTemplate(serviceMap.CloudFormationTemplate)
+		cfTemplate.CreateStack(branchName)
+		configMapEntry.CloudFormationStack = cfTemplate.StackName
 	}
 
 	env := convertMapToEnvVars(serviceMap)
@@ -98,7 +95,7 @@ func RunStagePush(args []string) {
 		stagingYaml := StagingValuesYAML{
 			ImageTag:             imageTags[svc],
 			Env:                  env,
-			CloudFormationValues: cfValues,
+			CloudFormationValues: cfTemplate.Output,
 		}
 
 		yaml := getStagingYaml(stagingYaml)
@@ -283,87 +280,4 @@ func getSelectedBuilds(config Config) []Build {
 		}
 	}
 	return builds
-}
-
-func readCloudFormationTemplate() map[string]string {
-	path := viper.GetString("release")
-	cf := serviceMap.CloudFormationTemplate
-	cfTemplate := path + "/.cloudformation/" + cf + ".yaml"
-	yamlBytes, err := ioutil.ReadFile(cfTemplate)
-	if err != nil {
-		panic(err)
-	}
-	return loadCloudFormationTemplate(cf, yamlBytes)
-}
-
-func loadCloudFormationTemplate(cf string, yamlBytes []byte) map[string]string {
-	fmt.Printf("\nRunning CloudFormation stack [%s]", cf)
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String("us-west-2"),
-	}))
-	svc := cloudformation.New(sess)
-
-	templateBody := string(yamlBytes)
-	stackName := cf + "-" + branchName
-	cloudFormationValues := make(map[string]string)
-	configMapEntry.CloudFormationStack = stackName
-
-	createStackParams := &cloudformation.CreateStackInput{
-		StackName:    aws.String(stackName),
-		TemplateBody: aws.String(templateBody),
-	}
-
-	describeStacksParams := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(stackName),
-	}
-
-	out, err := svc.CreateStack(createStackParams)
-	if err != nil {
-		if strings.Contains(err.Error(), "AlreadyExistsException") {
-			fmt.Printf("\nCloudFormation stack [%s] already exists. Skipping...", cf)
-			descOut, err := svc.DescribeStacks(describeStacksParams)
-			if err != nil {
-				panic(err)
-			}
-			cloudFormationValues = parseOutput(descOut, cloudFormationValues)
-			return cloudFormationValues
-		}
-		fmt.Printf("%s", err)
-		panic(err)
-	} else {
-		fmt.Printf("%s", out)
-	}
-
-	stackReady := false
-
-	for stackReady != true {
-
-		descOut, err := svc.DescribeStacks(describeStacksParams)
-		if err != nil {
-			fmt.Printf("%s", err)
-			panic(err)
-		} else {
-			fmt.Printf("\nCloudFormation stack [%s] is creating...", cf)
-		}
-
-		if *descOut.Stacks[0].StackStatus == "CREATE_COMPLETE" {
-			stackReady = true
-			fmt.Printf("\nCloudFormation stack [%s] ready...\n", cf)
-			cloudFormationValues = parseOutput(descOut, cloudFormationValues)
-		}
-
-		time.Sleep(time.Second * 7)
-	}
-
-	return cloudFormationValues
-}
-
-func parseOutput(descOut *cloudformation.DescribeStacksOutput, cloudFormationValues map[string]string) map[string]string {
-	stack := descOut.Stacks[0]
-	for _, cfOutput := range stack.Outputs {
-		trimKey := strings.TrimSpace(*cfOutput.OutputKey)
-		trimVal := strings.TrimSpace(*cfOutput.OutputValue)
-		cloudFormationValues[trimKey] = trimVal
-	}
-	return cloudFormationValues
 }
