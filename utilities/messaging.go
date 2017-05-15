@@ -41,3 +41,7 @@ func AskForConfirmation(msg string) bool {
 		}
 	}
 }
+
+func PrintWrapper(prefix string, msg string) {
+	fmt.Printf("%s | %s\n", prefix, msg)
+}
