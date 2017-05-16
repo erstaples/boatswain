@@ -50,7 +50,6 @@ func RunStagePush(args []string) {
 	packageID = args[1]
 	smapConfig := lib.NewStagingServiceMapConfig()
 	smap := smapConfig.GetServiceMap(serviceMapName)
-	config := lib.LoadConfig()
 
 	selectedBuilds := lib.GetBuilds(*smap)
 
@@ -78,8 +77,7 @@ func RunStagePush(args []string) {
 		helmDeploys = append(helmDeploys, svc)
 	}
 	genIngress(*smapConfig)
-	cmap := lib.NewStagingConfigMap()
-	cmap.AddConfig(
+	lib.NewStagingConfigMap().AddConfig(
 		lib.StagingConfigMapEntry{
 			CloudFormationStack: cfTemplate.StackName,
 			HelmDeployments:     helmDeploys,

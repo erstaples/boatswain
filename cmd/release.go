@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/medbridge/boatswain/lib"
 	utils "github.com/medbridge/boatswain/utilities"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,7 +46,6 @@ type ReleaseOptions struct {
 	PackageIDOverride string
 	OptSetValues      string
 }
-
 
 // releaseCmd represents the release command
 var releaseCmd = &cobra.Command{
