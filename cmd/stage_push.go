@@ -17,12 +17,12 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/medbridge/boatswain/lib"
+	b "github.com/medbridge/boatswain/lib/build"
 	"github.com/medbridge/mocking/factories"
 	"github.com/spf13/cobra"
 )
 
-var build = lib.Build{}
+var build = b.Build{}
 var packageID string
 
 var stagePushCmd = &cobra.Command{
@@ -50,40 +50,38 @@ func RunStagePush(args []string) {
 	packageID = args[1]
 	smapConfig := lib.NewStagingServiceMapConfig()
 	smap := smapConfig.GetServiceMap(serviceMapName)
-
-	selectedBuilds := lib.GetBuilds(*smap)
-
-	cfTemplate := lib.CloudFormationTemplate{Output: make(map[string]string)}
-
-	if len(smap.CloudFormationTemplate) > 0 {
-		cfTemplate = *lib.NewCloudFormationTemplate(smap.CloudFormationTemplate)
-		cfTemplate.CreateStack(packageID)
-	}
-
+	builds := lib.GetBuilds(*smap)
+	cloudformation := lib.CloudFormationTemplate{Output: make(map[string]string)}
 	env := smap.GetEnvironmentVars(packageID)
 	imageTags := make(map[string]string)
 
-	for _, build := range selectedBuilds {
-
-		fmt.Printf("\nRunning build %s", build.Name)
-		imageTags[build.Name] = build.Exec()
-
+	if len(smap.CloudFormationTemplate) > 0 {
+		cloudformation = *lib.NewCloudFormationTemplate(smap.CloudFormationTemplate)
+		cloudformation.CreateStack(packageID)
 	}
+
+	for _, build := range builds {
+		imageTags[build.Name] = build.Exec()
+	}
+
 	helmDeploys := []string{}
 	for _, svc := range smap.Test {
 		values := lib.NewValues(packageID, svc, imageTags[svc], env)
-		values.CloudFormationValues = cfTemplate.Output
+		values.CloudFormationValues = cloudformation.Output
 		runRelease(svc, values.Write())
 		helmDeploys = append(helmDeploys, svc)
 	}
+
 	genIngress(*smapConfig)
+
 	lib.NewStagingConfigMap().AddConfig(
 		lib.StagingConfigMapEntry{
-			CloudFormationStack: cfTemplate.StackName,
+			CloudFormationStack: cloudformation.StackName,
 			HelmDeployments:     helmDeploys,
 			Name:                packageID,
 			Ingress:             smapConfig.Ingress.RenderHostName(packageID),
 		})
+
 }
 
 func runRelease(name string, valuesFile string) {
@@ -97,14 +95,13 @@ func runRelease(name string, valuesFile string) {
 		NoExecute:         false,
 		PackageIDOverride: packageID,
 	}
+
 	RunRelease(args, options)
 }
 
 func genIngress(config lib.ServiceMapConfig) {
 	cmdFactory := &factories.CommandFactory{}
-
 	args := []string{config.Ingress.RenderHostName(packageID)}
-
 	options := GenIngressFlags{
 		Service:     packageID + "-" + config.Ingress.Service,
 		EnableTLS:   false,
