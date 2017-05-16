@@ -54,6 +54,7 @@ func RunStagePush(args []string) {
 	cloudformation := lib.CloudFormationTemplate{Output: make(map[string]string)}
 	env := smap.GetEnvironmentVars(packageID)
 	imageTags := make(map[string]string)
+	ingressHost := smapConfig.Ingress.RenderHostName(packageID)
 
 	if len(smap.CloudFormationTemplate) > 0 {
 		cloudformation = *lib.NewCloudFormationTemplate(smap.CloudFormationTemplate)
@@ -79,7 +80,7 @@ func RunStagePush(args []string) {
 			CloudFormationStack: cloudformation.StackName,
 			HelmDeployments:     helmDeploys,
 			Name:                packageID,
-			Ingress:             smapConfig.Ingress.RenderHostName(packageID),
+			Ingress:             ingressHost,
 		})
 
 }

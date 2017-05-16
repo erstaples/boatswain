@@ -15,7 +15,7 @@ func (i *ServiceMapIngress) RenderHostName(packageID string) string {
 	tmpl, _ := template.New("ingress").Parse(i.Template)
 	var doc bytes.Buffer
 	ingressName := struct {
-		packageID string
+		PackageID string
 	}{packageID}
 	err := tmpl.Execute(&doc, ingressName)
 	if err != nil {
