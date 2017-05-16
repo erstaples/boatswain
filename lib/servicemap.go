@@ -1,55 +1,65 @@
 package lib
 
-// type ServiceMapConfig struct {
-// 	ServiceMaps []ServiceMap      `yaml:"ServiceMaps"`
-// 	Ingress     ServiceMapIngress `yaml:"Ingress"`
-// }
+import (
+	"io/ioutil"
 
-// type ServiceMap struct {
-// 	Name                   string   `yaml:"Name"`
-// 	Test                   []string `yaml:"Test"`
-// 	Staging                []string `yaml:"Staging"`
-// 	CloudFormationTemplate string   `yaml:"CloudFormationTemplate"`
-// }
+	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
+)
 
-// type ServiceMapIngress struct {
-// 	Template string `yaml:"Template"`
-// 	Service  string `yaml:"Service"`
-// 	Port     string `yaml:"Port"`
-// }
+type ServiceMapConfig struct {
+	ServiceMaps []ServiceMap      `yaml:"ServiceMaps"`
+	Ingress     ServiceMapIngress `yaml:"Ingress"`
+}
 
-// func loadServiceMap() {
-// 	//get the service serviceMap file
-// 	path := viper.GetString("release") //TODO: capitalize this
-// 	fullPath := path + "/.servicemap/staging.yaml"
-// 	valuesBytes, err := ioutil.ReadFile(fullPath)
+type ServiceMap struct {
+	Name                   string   `yaml:"Name"`
+	Test                   []string `yaml:"Test"`
+	Staging                []string `yaml:"Staging"`
+	CloudFormationTemplate string   `yaml:"CloudFormationTemplate"`
+}
 
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func NewServiceMapConfig() *ServiceMapConfig {
+	config := ServiceMapConfig{}
+	return &config
+}
 
-// 	err = yaml.Unmarshal(valuesBytes, &serviceMapConfig)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func NewStagingServiceMapConfig() *ServiceMapConfig {
+	config := NewServiceMapConfig()
+	path := viper.GetString("release")
+	fullPath := path + "/.servicemap/staging.yaml"
+	valuesBytes, err := ioutil.ReadFile(fullPath)
 
-// 	for _, sMap := range serviceMapConfig.ServiceMaps {
-// 		if serviceMapName == sMap.Name {
-// 			serviceMap = sMap
-// 		}
-// 	}
-// }
+	if err != nil {
+		panic(err)
+	}
 
-// func convertMapToEnvVars(serviceMap ServiceMap) map[string]string {
-// 	env := make(map[string]string)
+	err = yaml.Unmarshal(valuesBytes, &config)
+	if err != nil {
+		panic(err)
+	}
+	return config
+}
 
-// 	for _, testSvc := range serviceMap.Test {
-// 		env[testSvc] = branchName + "-" + testSvc
-// 	}
+func (s *ServiceMapConfig) GetServiceMap(name string) *ServiceMap {
+	for _, smap := range s.ServiceMaps {
+		if smap.Name == name {
+			return &smap
+		}
+	}
+	return nil
+}
 
-// 	for _, stagingSvc := range serviceMap.Staging {
-// 		env[stagingSvc] = "staging-" + stagingSvc
-// 	}
+func (s *ServiceMap) GetEnvironmentVars(packageID string) map[string]string {
+	env := make(map[string]string)
 
-// 	return env
-// }
+	for _, svc := range s.Test {
+		env[svc] = packageID + "-" + svc
+	}
+
+	for _, svc := range s.Staging {
+		env[svc] = "staging-" + svc
+	}
+
+	return env
+}

@@ -20,24 +20,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ServiceMapConfig struct {
-	ServiceMaps []ServiceMap      `yaml:"ServiceMaps"`
-	Ingress     ServiceMapIngress `yaml:"Ingress"`
-}
-
-type ServiceMap struct {
-	Name                   string   `yaml:"Name"`
-	Test                   []string `yaml:"Test"`
-	Staging                []string `yaml:"Staging"`
-	CloudFormationTemplate string   `yaml:"CloudFormationTemplate"`
-}
-
-type ServiceMapIngress struct {
-	Template string `yaml:"Template"`
-	Service  string `yaml:"Service"`
-	Port     string `yaml:"Port"`
-}
-
 // stageCmd represents the stage command
 var StageCmd = &cobra.Command{
 	Use:   "stage [push|delete]",

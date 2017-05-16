@@ -3,7 +3,6 @@ package lib
 import (
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/medbridge/boatswain/utilities"
 )
@@ -11,23 +10,15 @@ import (
 type Build struct {
 	Name     string
 	Path     string
-	Targets  string
 	Rootpath string
 	ImageTag string
 }
 
+//Exec Runs the build shell script at Path
 func (b *Build) Exec() string {
 	cmdName := "/bin/bash"
 	cmdArgs := []string{b.Path, "push"}
 
-	targetsString := b.Targets
-	targets := strings.Split(targetsString, ",")
-
-	if len(targets) > 0 {
-		for _, target := range targets {
-			cmdArgs = append(cmdArgs, target)
-		}
-	}
 	os.Chdir(b.Rootpath)
 	utilities.ExecStreamOut(cmdName, cmdArgs, "build.sh")
 
@@ -35,6 +26,7 @@ func (b *Build) Exec() string {
 	return b.ImageTag
 }
 
+//SetImageTag gets a git commit sha from RootPath and sets the ImageTag
 func (b *Build) SetImageTag() {
 	os.Chdir(b.Rootpath)
 	cmdName := "git"
@@ -44,4 +36,18 @@ func (b *Build) SetImageTag() {
 		panic(err)
 	}
 	b.ImageTag = string(out[:])
+}
+
+//GetBuilds iterates over a service map and returns an array of Build objects that are needed for the release. Builds are defined in the ~/.boatswain.yaml config file
+func GetBuilds(smap ServiceMap) []Build {
+	config := LoadConfig()
+	var builds []Build
+	for _, svc := range smap.Test {
+		for _, build := range config.Builds {
+			if svc == build.Name {
+				builds = append(builds, build)
+			}
+		}
+	}
+	return builds
 }

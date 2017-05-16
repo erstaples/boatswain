@@ -15,26 +15,15 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
-	"html/template"
-	"io/ioutil"
-
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/medbridge/boatswain/lib"
 	"github.com/medbridge/mocking/factories"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var build = lib.Build{}
-var branchName string
-var serviceMapName string
-var serviceMapConfig ServiceMapConfig
-var serviceMap ServiceMap
-var configMapEntry lib.StagingConfigMapEntry
-var stagingConfigMap lib.StagingConfigMap
+var packageID string
 
 var stagePushCmd = &cobra.Command{
 	Use:   "push [appnames] [domain]",
@@ -57,29 +46,22 @@ func RunStagePush(args []string) {
 		return
 	}
 
-	serviceMapName = args[0]
-	branchName = args[1]
-	loadServiceMap()
-	stagingConfigMap.LoadConfigMap()
-	configMapEntry.Name = branchName
-	configMapEntry.Ingress = branchName + ".k8staging.medbridgeeducation.com"
+	serviceMapName := args[0]
+	packageID = args[1]
+	smapConfig := lib.NewStagingServiceMapConfig()
+	smap := smapConfig.GetServiceMap(serviceMapName)
+	config := lib.LoadConfig()
 
-	config := Config{}
-	configPath := viper.ConfigFileUsed()
-	yamlFile, _ := ioutil.ReadFile(configPath)
-	yaml.Unmarshal(yamlFile, &config)
-
-	selectedBuilds := getBuilds(config)
+	selectedBuilds := lib.GetBuilds(*smap)
 
 	cfTemplate := lib.CloudFormationTemplate{Output: make(map[string]string)}
 
-	if len(serviceMap.CloudFormationTemplate) > 0 {
-		cfTemplate = *lib.NewCloudFormationTemplate(serviceMap.CloudFormationTemplate)
-		cfTemplate.CreateStack(branchName)
-		configMapEntry.CloudFormationStack = cfTemplate.StackName
+	if len(smap.CloudFormationTemplate) > 0 {
+		cfTemplate = *lib.NewCloudFormationTemplate(smap.CloudFormationTemplate)
+		cfTemplate.CreateStack(packageID)
 	}
 
-	env := convertMapToEnvVars(serviceMap)
+	env := smap.GetEnvironmentVars(packageID)
 	imageTags := make(map[string]string)
 
 	for _, build := range selectedBuilds {
@@ -88,19 +70,25 @@ func RunStagePush(args []string) {
 		imageTags[build.Name] = build.Exec()
 
 	}
-
-	for _, svc := range serviceMap.Test {
-		values := lib.NewValues(branchName, svc, imageTags[svc], env)
+	helmDeploys := []string{}
+	for _, svc := range smap.Test {
+		values := lib.NewValues(packageID, svc, imageTags[svc], env)
 		values.CloudFormationValues = cfTemplate.Output
 		runRelease(svc, values.Write())
+		helmDeploys = append(helmDeploys, svc)
 	}
-	genIngress()
-
-	stagingConfigMap.AddConfig(configMapEntry)
+	genIngress(*smapConfig)
+	cmap := lib.NewStagingConfigMap()
+	cmap.AddConfig(
+		lib.StagingConfigMapEntry{
+			CloudFormationStack: cfTemplate.StackName,
+			HelmDeployments:     helmDeploys,
+			Name:                packageID,
+			Ingress:             smapConfig.Ingress.RenderHostName(packageID),
+		})
 }
 
 func runRelease(name string, valuesFile string) {
-
 	args := []string{name}
 	options := ReleaseOptions{
 		Environment:       "staging",
@@ -109,81 +97,21 @@ func runRelease(name string, valuesFile string) {
 		Packfile:          valuesFile,
 		Xdebug:            false,
 		NoExecute:         false,
-		PackageIDOverride: branchName,
+		PackageIDOverride: packageID,
 	}
 	RunRelease(args, options)
-	configMapEntry.HelmDeployments = append(configMapEntry.HelmDeployments, name)
 }
 
-func genIngress() {
+func genIngress(config lib.ServiceMapConfig) {
 	cmdFactory := &factories.CommandFactory{}
 
-	tmpl, _ := template.New("ingress_host").Parse(serviceMapConfig.Ingress.Template)
-	var doc bytes.Buffer
-	ingressName := struct {
-		BranchName string
-	}{branchName}
-	err := tmpl.Execute(&doc, ingressName)
-	if err != nil {
-		panic(err)
-	}
-	ingressHost := doc.String()
-	args := []string{ingressHost}
+	args := []string{config.Ingress.RenderHostName(packageID)}
 
 	options := GenIngressFlags{
-		Service:     branchName + "-" + serviceMapConfig.Ingress.Service,
+		Service:     packageID + "-" + config.Ingress.Service,
 		EnableTLS:   false,
-		ServicePort: serviceMapConfig.Ingress.Port,
+		ServicePort: config.Ingress.Port,
 	}
 
 	RunGenIngress(args, cmdFactory, options)
-}
-
-func loadServiceMap() {
-	//get the service serviceMap file
-	path := viper.GetString("release") //TODO: capitalize this
-	fullPath := path + "/.servicemap/staging.yaml"
-	valuesBytes, err := ioutil.ReadFile(fullPath)
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = yaml.Unmarshal(valuesBytes, &serviceMapConfig)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, sMap := range serviceMapConfig.ServiceMaps {
-		if serviceMapName == sMap.Name {
-			serviceMap = sMap
-		}
-	}
-}
-
-func convertMapToEnvVars(serviceMap ServiceMap) map[string]string {
-	env := make(map[string]string)
-
-	for _, testSvc := range serviceMap.Test {
-		env[testSvc] = branchName + "-" + testSvc
-	}
-
-	for _, stagingSvc := range serviceMap.Staging {
-		env[stagingSvc] = "staging-" + stagingSvc
-	}
-
-	return env
-}
-
-func getBuilds(config Config) []lib.Build {
-	var builds []lib.Build
-	fmt.Printf("%s", serviceMap)
-	for _, testSvc := range serviceMap.Test {
-		for _, build := range config.Builds {
-			if testSvc == build.Name {
-				builds = append(builds, build)
-			}
-		}
-	}
-	return builds
 }

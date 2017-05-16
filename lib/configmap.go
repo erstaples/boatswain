@@ -21,6 +21,12 @@ type StagingConfigMapEntry struct {
 	CloudFormationStack string   `yaml:"CloudFormationStack"`
 }
 
+func NewStagingConfigMap() *StagingConfigMap {
+	m := StagingConfigMap{}
+	m.LoadConfigMap()
+	return &m
+}
+
 //RenderTemplate returns a ConfigMap object string
 func (m *StagingConfigMap) RenderTemplate() string {
 	/**

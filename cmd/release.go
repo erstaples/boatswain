@@ -48,10 +48,6 @@ type ReleaseOptions struct {
 	OptSetValues      string
 }
 
-type Config struct {
-	Release string
-	Builds  []lib.Build
-}
 
 // releaseCmd represents the release command
 var releaseCmd = &cobra.Command{
