@@ -14,8 +14,6 @@ import (
 
 var cfDir = ".cloudformation"
 
-//it's purpose is to find a cloudformation template from the template dir, create it with the aws api, and return
-//the output associated with it (e.g. aws)
 type CloudFormationTemplate struct {
 	Name      string
 	StackName string
@@ -23,18 +21,17 @@ type CloudFormationTemplate struct {
 	Bytes     []byte
 }
 
+//NewCloudFormationTemplate takes a cloudformation template filepath and
+//reads the file contents, loads it into .Bytes field
 func NewCloudFormationTemplate(name string) *CloudFormationTemplate {
-	c := new(CloudFormationTemplate)
+	c := CloudFormationTemplate{Name: name}
 	c.ReadFile(name)
-	c.Name = name
-	return c
+	return &c
 }
 
+//CreateStack calls the cloudformation.CreateStack method. If the stack has already been created,
+//then it gets the output from DescribeStack. Also sets .StackName property
 func (c *CloudFormationTemplate) CreateStack(suffix string) {
-	c.LoadCloudFormationTemplate(suffix)
-}
-
-func (c *CloudFormationTemplate) LoadCloudFormationTemplate(suffix string) {
 	fmt.Printf("\nRunning CloudFormation stack [%s]", c.Name)
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-west-2"),
@@ -93,6 +90,8 @@ func (c *CloudFormationTemplate) LoadCloudFormationTemplate(suffix string) {
 
 }
 
+//ParseOutput takes a cloudformation.DescribeStacksOutput, iterates over the output and sets
+//the .Output map field on the instance
 func (c *CloudFormationTemplate) ParseOutput(descOut *cloudformation.DescribeStacksOutput, cloudFormationValues map[string]string) {
 	stack := descOut.Stacks[0]
 	for _, cfOutput := range stack.Outputs {
