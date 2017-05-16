@@ -20,7 +20,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -32,7 +31,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var build = Build{}
+var build = lib.Build{}
 var branchName string
 var serviceMapName string
 var serviceMapConfig ServiceMapConfig
@@ -73,7 +72,7 @@ func RunStagePush(args []string) {
 	yamlFile, _ := ioutil.ReadFile(configPath)
 	yaml.Unmarshal(yamlFile, &config)
 
-	selectedBuilds := getSelectedBuilds(config)
+	selectedBuilds := getBuilds(config)
 	var cfTemplate *lib.CloudFormationTemplate
 
 	if len(serviceMap.CloudFormationTemplate) > 0 {
@@ -86,8 +85,10 @@ func RunStagePush(args []string) {
 	imageTags := make(map[string]string)
 
 	for _, build := range selectedBuilds {
-		fmt.Printf("\n Running build %s", build)
-		imageTags[build.Name] = runBuild(build)
+
+		fmt.Printf("\n Running build %s", build.Name)
+		build.RunBuild()
+		imageTags[build.Name] = build.ImageTag
 
 	}
 
@@ -108,25 +109,6 @@ func RunStagePush(args []string) {
 	stagingConfigMap.AddConfig(configMapEntry)
 }
 
-func runBuild(build Build) string {
-	cmdName := "/bin/bash"
-	cmdArgs := []string{build.Path, "push"}
-
-	targetsString := build.Targets
-	targets := strings.Split(targetsString, ",")
-
-	if len(targets) > 0 {
-		for _, target := range targets {
-			cmdArgs = append(cmdArgs, target)
-		}
-	}
-	os.Chdir(build.Rootpath)
-	utilities.ExecStreamOut(cmdName, cmdArgs, "build.sh")
-
-	sha := getGitCommitSha(build)
-	return string(sha[:])
-}
-
 func runRelease(name string, valuesFile string) {
 
 	args := []string{name}
@@ -141,17 +123,6 @@ func runRelease(name string, valuesFile string) {
 	}
 	RunRelease(args, options)
 	configMapEntry.HelmDeployments = append(configMapEntry.HelmDeployments, name)
-}
-
-func getGitCommitSha(build Build) []byte {
-	os.Chdir(build.Rootpath)
-	cmdName := "git"
-	cmdArgs := []string{"show", "-s", "--pretty=format:%h"}
-	out, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	return out
 }
 
 func getStagingYaml(yaml StagingValuesYAML) string {
@@ -269,8 +240,8 @@ func convertMapToEnvVars(serviceMap ServiceMap) map[string]string {
 	return env
 }
 
-func getSelectedBuilds(config Config) []Build {
-	var builds []Build
+func getBuilds(config Config) []lib.Build {
+	var builds []lib.Build
 	fmt.Printf("%s", serviceMap)
 	for _, testSvc := range serviceMap.Test {
 		for _, build := range config.Builds {

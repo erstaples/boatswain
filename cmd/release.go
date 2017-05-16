@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/medbridge/boatswain/lib"
 	utils "github.com/medbridge/boatswain/utilities"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -49,14 +50,7 @@ type ReleaseOptions struct {
 
 type Config struct {
 	Release string
-	Builds  []Build
-}
-
-type Build struct {
-	Name     string
-	Path     string
-	Targets  string
-	Rootpath string
+	Builds  []lib.Build
 }
 
 // releaseCmd represents the release command
