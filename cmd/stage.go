@@ -20,14 +20,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
-type StagingValuesYAML struct {
-	ImageTag             string
-	ServiceMap           []string `yaml:"ServiceMap"`
-	Env                  map[string]string
-	CloudFormationValues map[string]string `yaml:"CloudFormationValues"`
-}
-
 type ServiceMapConfig struct {
 	ServiceMaps []ServiceMap      `yaml:"ServiceMaps"`
 	Ingress     ServiceMapIngress `yaml:"Ingress"`

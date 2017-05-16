@@ -16,18 +16,7 @@ type Build struct {
 	ImageTag string
 }
 
-func (b *Build) SetImageTag() {
-	os.Chdir(b.Rootpath)
-	cmdName := "git"
-	cmdArgs := []string{"show", "-s", "--pretty=format:%h"}
-	out, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	b.ImageTag = string(out[:])
-}
-
-func (b *Build) RunBuild() string {
+func (b *Build) Exec() string {
 	cmdName := "/bin/bash"
 	cmdArgs := []string{b.Path, "push"}
 
@@ -44,4 +33,15 @@ func (b *Build) RunBuild() string {
 
 	b.SetImageTag()
 	return b.ImageTag
+}
+
+func (b *Build) SetImageTag() {
+	os.Chdir(b.Rootpath)
+	cmdName := "git"
+	cmdArgs := []string{"show", "-s", "--pretty=format:%h"}
+	out, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	if err != nil {
+		panic(err)
+	}
+	b.ImageTag = string(out[:])
 }

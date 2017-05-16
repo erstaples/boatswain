@@ -60,9 +60,11 @@ func (c *CloudFormationTemplate) CreateStack(suffix string) {
 				panic(err)
 			}
 			c.ParseOutput(descOut, cloudFormationValues)
+			return
+		} else {
+			fmt.Printf("%s", err)
+			panic(err)
 		}
-		fmt.Printf("%s", err)
-		panic(err)
 	} else {
 		fmt.Printf("%s", out)
 	}
