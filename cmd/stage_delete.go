@@ -22,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	cm "github.com/medbridge/boatswain/lib/configmap"
+	"github.com/medbridge/boatswain/lib"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -44,7 +44,7 @@ func init() {
 
 //RunStageDelete performs cleanup on stagings. Deletes CloudFormation stack, Ingress, Helm deployment, and staging values files
 func RunStageDelete(args []string) {
-	var confMap cm.StagingConfigMap
+	var confMap lib.StagingConfigMap
 	domain := args[0]
 	entry := confMap.Find(domain)
 

@@ -17,12 +17,12 @@ package cmd
 import (
 	"fmt"
 
-	b "github.com/medbridge/boatswain/lib/build"
+	"github.com/medbridge/boatswain/lib"
 	"github.com/medbridge/mocking/factories"
 	"github.com/spf13/cobra"
 )
 
-var build = b.Build{}
+var build = lib.Build{}
 var packageID string
 
 var stagePushCmd = &cobra.Command{
