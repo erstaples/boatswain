@@ -17,7 +17,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/medbridge/boatswain/lib"
+	cm "github.com/medbridge/boatswain/lib/configmap"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +36,7 @@ func init() {
 
 //RunStageList output all active stagings
 func RunStageList(args []string) {
-	var confMap lib.StagingConfigMap
+	var confMap cm.StagingConfigMap
 	confMap.LoadConfigMap()
 	for _, staging := range confMap.Config {
 		fmt.Printf("\n* %s", staging.Name)
