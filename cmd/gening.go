@@ -19,10 +19,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
+
 	"regexp"
 	"text/template"
 
+	"github.com/medbridge/mocking/factories"
 	"github.com/spf13/cobra"
 )
 
@@ -30,12 +31,21 @@ var service string
 var servicePort string
 var enableTLS bool
 
+//Ingress Kubernetes ingress object
 type Ingress struct {
 	Name        string
 	HostName    string
 	ServiceName string
 	ServicePort string
 	SecretName  string
+	EnableTLS   bool
+}
+
+//GenIngressFlags wrapper for boatswain gening flags
+type GenIngressFlags struct {
+	Service     string
+	ServicePort string
+	EnableTLS   bool
 }
 
 // geningCmd represents the gening command
@@ -46,68 +56,63 @@ var geningCmd = &cobra.Command{
 	
 	boatswain gening example.com`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		if len(args) == 0 {
-			fmt.Println("Missing argument: host")
-		}
-		host := args[0]
-		var ingress Ingress
-
-		if enableTLS {
-			secretName := "tls-" + host
-			fmt.Println(secretName)
-
-			cmdName := "openssl"
-			cmdArgs := []string{
-				"req", "-x509",
-				"-sha256", "-nodes", "-newkey", "rsa:4096",
-				"-keyout", "tls.key",
-				"-out", "tls.crt",
-				"-days", "365",
-				"-subj", "/CN=" + host}
-
-			out, _ := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-
-			fmt.Printf("%s", out)
-
-			cmdName = "kubectl"
-			cmdArgs = []string{
-				"create", "secret", "tls", secretName, "--cert=./tls.crt", "--key=./tls.key"}
-			out, _ = exec.Command(cmdName, cmdArgs...).CombinedOutput()
-
-			fmt.Printf("%s", out)
-			os.Remove("tls.crt")
-			os.Remove("tls.key")
-
-			ingress = Ingress{HostName: host, ServiceName: service, ServicePort: servicePort, SecretName: secretName}
-		} else {
-			ingress = Ingress{HostName: host, ServiceName: service, ServicePort: servicePort}
-		}
-
-		ingRegex, _ := regexp.Compile("\\*")
-		ingName := ingRegex.ReplaceAllString(host, "wildcard")
-		ingress.Name = ingName
-
-		var k8smanifest string
-		if enableTLS {
-			k8smanifest, _ = getHTTPSIngress(ingress)
-		} else {
-			k8smanifest, _ = getHTTPIngress(ingress)
-		}
-
-		ingCmd := exec.Command("kubectl", "apply", "-f", "-")
-		stdin, _ := ingCmd.StdinPipe()
-
-		fmt.Printf("%s", k8smanifest)
-		go func() {
-			defer stdin.Close()
-			io.WriteString(stdin, k8smanifest)
-
-		}()
-
-		out, _ := ingCmd.CombinedOutput()
-		fmt.Printf("%s", out)
+		cmdFactory := &factories.CommandFactory{}
+		flags := GenIngressFlags{Service: service, ServicePort: servicePort, EnableTLS: enableTLS}
+		RunGenIngress(args, cmdFactory, flags)
 	},
+}
+
+// RunGenIngress command for boatswain gening
+func RunGenIngress(args []string, cmdFactory factories.ICommandFactory, cmdFlags GenIngressFlags) {
+	if len(args) == 0 {
+		fmt.Println("Missing argument: host")
+	}
+	host := args[0]
+	ingress := Ingress{
+		HostName:    host,
+		ServiceName: cmdFlags.Service,
+		ServicePort: cmdFlags.ServicePort,
+		EnableTLS:   cmdFlags.EnableTLS}
+
+	if cmdFlags.EnableTLS {
+		secretName := "tls-" + host
+
+		cmdName := "openssl"
+		cmdArgs := []string{
+			"req", "-x509",
+			"-sha256", "-nodes", "-newkey", "rsa:4096",
+			"-keyout", "tls.key",
+			"-out", "tls.crt",
+			"-days", "365",
+			"-subj", "/CN=" + host}
+
+		cmdFactory.Command(cmdName, cmdArgs...).CombinedOutput()
+
+		cmdName = "kubectl"
+		cmdArgs = []string{
+			"create", "secret", "tls", secretName, "--cert=./tls.crt", "--key=./tls.key"}
+		cmdFactory.Command(cmdName, cmdArgs...).CombinedOutput()
+
+		os.Remove("tls.crt")
+		os.Remove("tls.key")
+
+		ingress.SecretName = secretName
+	}
+
+	ingRegex, _ := regexp.Compile("\\*")
+	ingress.Name = ingRegex.ReplaceAllString(host, "wildcard")
+	k8smanifest, _ := getIngress(ingress)
+
+	ingCmd := cmdFactory.Command("kubectl", "apply", "-f", "-")
+	stdin, _ := ingCmd.StdinPipe()
+
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, k8smanifest)
+
+	}()
+
+	ingCmd.CombinedOutput()
 }
 
 func init() {
@@ -119,8 +124,8 @@ func init() {
 
 }
 
-func getHTTPIngress(ing Ingress) (string, error) {
-	tmpl, err := template.New("ingress-notls").Parse(`
+func getIngress(ing Ingress) (string, error) {
+	tmpl, err := template.New("ingress").Parse(`
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -133,31 +138,12 @@ spec:
       - backend:
           serviceName: {{.ServiceName}}
           servicePort: {{.ServicePort}}
-`)
-	var doc bytes.Buffer
-	err = tmpl.Execute(&doc, ing)
-	s := doc.String()
-	return s, err
-}
-
-func getHTTPSIngress(ing Ingress) (string, error) {
-	tmpl, err := template.New("ingress-tls").Parse(`
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: {{.Name}}
-spec:
-  rules:
-  - host: "{{.HostName}}"
-    http:
-      paths:
-      - backend:
-          serviceName: {{.ServiceName}}
-          servicePort: {{.ServicePort}}
+{{ if .EnableTLS }}
   tls:
   - hosts:
     - "{{.HostName}}"
     secretName: {{.SecretName}}
+{{ end }}
 `)
 	var doc bytes.Buffer
 	tmpl.Execute(&doc, ing)
@@ -165,14 +151,3 @@ spec:
 	s := doc.String()
 	return s, err
 }
-
-/**
-
-MATCHING_ROW=$(cat /etc/hosts | grep "^[0-9\.]*\s*${HOST_NAME}$")
-HAS_ROW=$?
-if [ $HAS_ROW -eq 1 ] && [ "$(kubectl config current-context)" == "minikube" ]; then
-echo "$(minikube ip)  ${HOST_NAME}" | sudo tee -a /etc/hosts
-echo "Your /etc/hosts file has been updated"
-fi
-
-**/
