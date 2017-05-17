@@ -8,7 +8,7 @@ Boatswain works in conjunction with a boatswain-values project, which is a set o
 |   ├── ace
 |   |   |
 |   |   └── templates
-|   |       └── ace-deployment.yaml
+|   |   |   └── ace-deployment.yaml
 |   |   └── values.yaml
 |   |   └── values.env.yaml
 |   |   └── values.staging.yaml
