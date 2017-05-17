@@ -7,7 +7,7 @@ Boatswain works in conjunction with a boatswain-values project, which is a set o
 ├── deployment
 |   ├── ace
 |   |   |
-|   |   └── templates
+|   |   ├── templates
 |   |   |   └── ace-deployment.yaml
 |   |   └── values.yaml
 |   |   └── values.env.yaml
