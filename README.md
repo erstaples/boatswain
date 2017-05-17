@@ -2,6 +2,7 @@
 
 ## Getting Started
 Boatswain works in conjunction with a boatswain-values project, which is a set of helm deployment folders. See the example below for a working boatswain-values deployment.
+```
 .
 ├── deployment
 |   ├── ace
@@ -23,6 +24,7 @@ Boatswain works in conjunction with a boatswain-values project, which is a set o
 |   └── members.yml
 ├── _site
 └── index.html
+```
 
 ## Config file lives in `${HOME}/.boatswain.yaml`
 
