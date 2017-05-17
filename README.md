@@ -1,5 +1,29 @@
 # boatswain
 
+## Getting Started
+Boatswain works in conjunction with a boatswain-values project, which is a set of helm deployment folders. See the example below for a working boatswain-values deployment.
+.
+├── deployment
+|   ├── ace
+|   |   |
+|   |   └── templates
+|   |   └── values.yaml
+|   |   └── values.staging.yaml
+|   |   └── values.env.yaml
+├── _includes
+|   ├── footer.html
+|   └── header.html
+├── _layouts
+|   ├── default.html
+|   └── post.html
+├── _posts
+|   ├── 2007-10-29-why-every-programmer-should-play-nethack.textile
+|   └── 2009-04-26-barcamp-boston-4-roundup.textile
+├── _data
+|   └── members.yml
+├── _site
+└── index.html
+
 ## Config file lives in `${HOME}/.boatswain.yaml`
 
 ## `boatswain stage push`
