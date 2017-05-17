@@ -6,13 +6,13 @@ In order to build and deploy automatically to staging, you need to add a `build`
 ```yaml
 release: /path/to/boatswain/deployment
 builds:
-- name: "medbridge"
-  path: "deployment/build.sh"
-  rootpath: "/Users/<name>/Programming/Php/Medbridge"
-- name: "medflix"
-  path: "deployment/build.sh"
-  rootpath: "/Users/<name>/Programming/Php/Medflix/"
-- name: "ace"
-  path: "deployment/build.sh"
-  rootpath: "/Users/<name>/Programming/Php/Ace"
+- name: medbridge
+  path: deployment/build.sh
+  rootpath: /Users/<name>/Programming/Php/Medbridge
+- name: medflix
+  path: deployment/build.sh
+  rootpath: /Users/<name>/Programming/Php/Medflix/
+- name: ace
+  path: deployment/build.sh
+  rootpath: /Users/<name>/Programming/Php/Ace
 ```
