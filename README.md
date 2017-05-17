@@ -8,12 +8,13 @@ Boatswain works in conjunction with a boatswain-values project, which is a set o
 |   ├── ace
 |   |   |
 |   |   └── templates
+|   |       └── ace-deployment.yaml
 |   |   └── values.yaml
-|   |   └── values.staging.yaml
 |   |   └── values.env.yaml
-├── _includes
-|   ├── footer.html
-|   └── header.html
+|   |   └── values.staging.yaml
+|   |   └── values.prod.yaml
+├── ├── another-deployment
+|   |   └── ...
 ├── _layouts
 |   ├── default.html
 |   └── post.html
