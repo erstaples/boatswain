@@ -48,6 +48,8 @@ items:
           {{- end }}
           {{ end }}
           env:
+          - name: NEWRELIC_LICENSE_KEY
+            value: "{{ .Values.Global.NewRelic.LicenseKey }}"
           - name: LOG_LEVEL
             value: "{{ .Values.Env.LOG_LEVEL }}"
           - name: SYSTEM_SECRET
