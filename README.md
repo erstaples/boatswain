@@ -3,9 +3,21 @@
 ## Getting Started
 Boatswain works in conjunction with a boatswain-values project, which is a set of helm deployment folders. See the example below for a working boatswain-values deployment.
 ```
-.
+boatswain-values
+|
 ├── deployment
-|   ├── ace
+|   |
+|   ├── .cloudformation
+|   |   └── cloudformation-template.yaml
+|   |
+|   ├── .globals
+|   |   └── values.staging.yaml
+|   |   └── values.yaml
+|   |
+|   ├── .servicemap
+|   |   └── staging.yaml
+|   |
+|   ├── my-helm-package
 |   |   |
 |   |   ├── templates
 |   |   |   └── ace-deployment.yaml
@@ -13,18 +25,10 @@ Boatswain works in conjunction with a boatswain-values project, which is a set o
 |   |   └── values.env.yaml
 |   |   └── values.staging.yaml
 |   |   └── values.prod.yaml
-├── ├── another-deployment
+|   |
+|   ├── another-helm-package
 |   |   └── ...
-├── _layouts
-|   ├── default.html
-|   └── post.html
-├── _posts
-|   ├── 2007-10-29-why-every-programmer-should-play-nethack.textile
-|   └── 2009-04-26-barcamp-boston-4-roundup.textile
-├── _data
-|   └── members.yml
-├── _site
-└── index.html
+
 ```
 
 ## Config file lives in `${HOME}/.boatswain.yaml`
