@@ -1,7 +1,7 @@
 # boatswain
 
 ## Getting Started
-Boatswain works in conjunction with a boatswain-values project, which is a set of helm deployment folders. See the example below for a working boatswain-values deployment.
+Boatswain works in conjunction with a boatswain-values project — you need both. A boatswain-values project is a set of Helm package folders. To learn more about Helm, or to learn more information about putting together a helm package, [visit the Helm repo](https://github.com/kubernetes/helm). The boatswain-values repo should be organized like this:
 ```
 boatswain-values
 |
