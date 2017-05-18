@@ -1,0 +1,3 @@
+Global:
+  NewRelic:
+    LicenseKey: the-production-key-goes-here
