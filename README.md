@@ -31,6 +31,8 @@ boatswain-values
 
 ```
 
+To learn more about the boatswain-values repo, [take a look at the example project]().
+
 ## Config file lives in `${HOME}/.boatswain.yaml`
 
 ## `boatswain stage push`
