@@ -1,7 +1,8 @@
 
 
 # Service Maps
-(Note: Currently service maps are only supported for `boatswain stage push`, and `.servicemaps/staging.yaml` is hardcoded. This is okay for now.)
+**(Note: Currently service maps are only supported for `boatswain stage push`, and `.servicemaps/staging.yaml` is hardcoded. This is okay for now.)**
+
 Service maps offer the ability to deploy groups of applications together, with wiring between those applications defined based on the specific needs of what needs to be tested. The functionality leans heavily on the use of service prefixes. For instance, if I run `boatswain stage push hydra erics-package`, my deployment will live in the cluster prefixed with `erics-package`:
 ```
 > kubectl get pod
