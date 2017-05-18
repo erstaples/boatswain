@@ -30,6 +30,7 @@ boatswain-values
 |   |   └── ...
 
 ```
+To learn more about the boatswain-values repo, [take a look at the example project](https://github.com/MedBridge/boatswain/tree/add-example-values/examples/boatswain-values/deployment).
 
 ## Config file lives in `${HOME}/.boatswain.yaml`
 
