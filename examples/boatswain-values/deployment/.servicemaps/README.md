@@ -18,7 +18,7 @@ my-test-hydra                10.3.0.22    <none>             80/TCP             
 staging-hydra                10.3.0.181   <none>             3306/TCP            18h
 ```
 
-Note that there is a separate `staging-hydra` pod and service that lives in the cluster. This is the default hydra service that all other stagings will use unless otherwise defined in the `ServiceMap` object's `Test` array. In other words, the `staging-` prefix is the default prefix. By using service/pod prefixes, we can control the wiring of our staging deployments and customize service mapping based on what needs to be tested.
+Note that there is a separate `staging-hydra` pod and service that lives in the cluster. This is the default hydra service that all other stagings will use unless otherwise defined in the `ServiceMap` object's `Test` array. In other words, the `staging-` prefix is the default prefix.
 
 Let's use the following service map to describe a use case for deploying the `hydra` application to staging.
 
