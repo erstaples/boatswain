@@ -8,7 +8,7 @@ Global:
     LicenseKey: abc123
 ```
 
-Global values can be accessed via the `.Values.Global` value object. For example, in the Hydra template, we use the New Relic global property like so:
+Global values can be accessed via the `.Values.Global` object. For example, in the Hydra template, we use the New Relic global property like so:
 
 ```yaml
 - name: NEWRELIC_LICENSE_KEY
