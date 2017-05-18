@@ -1,0 +1,18 @@
+Ingress: 
+  Template: {{ .PackageID }}.staging.my-domain.com
+  Service: medbridge
+  Port: 80
+ServiceMaps:
+  - Name: hydra
+    CloudFormationTemplate: ebs-hydra-mysql
+    Test:
+      - hydra
+      - hydra-db
+    Staging:
+      - other-service
+  - Name: other-service
+    Test:
+      - other-service-db
+      - other-service
+    Staging:
+      - hydra

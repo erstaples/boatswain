@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: List
+metadata: {}
+items:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+  type: Opaque
+  data:
+    name: {{ .Values.Secrets.DB.DBName | b64enc | quote }}
+    user: {{ .Values.Secrets.DB.User | b64enc | quote }}
+    password:  {{ .Values.Secrets.DB.Password | b64enc | quote }}
+
+{{ if empty .Values.DB.ExternalName }}
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: "{{ .Values.DB.Size }}"
+    volumeName:  "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+
+
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+    labels:
+      release: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    {{ if .Values.DB.AwsEbsVolumeId }}
+    awsElasticBlockStore:
+      volumeID: {{ .Values.DB.AwsEbsVolumeId }}
+    {{ else }}
+    hostPath:
+      path: {{ .Values.DB.HostPath }}
+    {{ end }}
+    capacity:
+      storage: "{{ .Values.DB.Size }}"
+    persistentVolumeReclaimPolicy: Retain
+
+
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+    labels:
+      component: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          component: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+      spec:
+        volumes:
+        - name: "data"
+          persistentVolumeClaim:
+            claimName: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+        containers:
+        - name: mysql
+          image: "mysql:5.7"
+          volumeMounts:
+          - name: "data"
+            mountPath: /var/lib/mysql
+          ports:
+          - containerPort: 3306
+            name: mysql
+            protocol: TCP
+          env:
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+                key: name
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+                key: password
+
+{{ end }}
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+    labels:
+      release: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+  spec:
+    ports:
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
+    sessionAffinity: None
+  {{ if .Values.DB.ExternalName }}
+    type: ExternalName
+    externalName: {{ .Values.DB.ExternalName }}
+    clusterIP: 
+  {{ else }}
+    selector:
+      component: "{{ .Values.packageId }}-{{ .Values.DB.Name }}"
+  {{ end }}

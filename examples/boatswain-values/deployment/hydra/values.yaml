@@ -1,0 +1,48 @@
+# Default Values for hydra.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+App:
+  Name: hydra
+  ReplicaCount: 1
+  Args: ["--dangerous-auto-logon","--dangerous-force-http"]
+Image:
+  Repository: oryd/hydra
+  Tag: v0.7.7-http
+  PullPolicy: IfNotPresent
+Service:
+  Name: hydra
+  ExternalPort: 4444
+  InternalPort: 4444
+Resources:
+  Limits:
+    Cpu: 100m
+    Memory: 128Mi
+  Requests:
+    Cpu: 100m
+    Memory: 128Mi
+
+
+DB:
+  Name: hydra-db
+  ExternalName: 
+  AwsEbsVolumeId: 
+  HostPath:
+  Size: 100Gi
+
+Secrets:
+  DB:
+    User: root
+    Password: password
+    DBName: hydra
+  System:
+    Secret: some-long-secret-goes-here
+    RootUser: admin
+    RootPassword: password
+
+
+Env:
+  LOG_LEVEL: debug
+  CONSENT_URL: #need for auth code grant type e.g. http://${DOCKER_IP}:3000/consent
+  ACCESS_TOKEN_LIFESPAN: #todo
+  ID_TOKEN_LIFESPAN: #todo
+  AUTHORIZE_CODE_LIFESPAN: #todo
