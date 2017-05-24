@@ -42,13 +42,13 @@ In order to build and deploy automatically to staging using `boatswain stage pus
 ```yaml
 ReleasePath: /path/to/boatswain-values/deployment
 Builds:
-- name: medbridge
-  path: deployment/build.sh
-  rootpath: /Users/<name>/Programming/Php/Medbridge
-- name: medflix
-  path: deployment/build.sh
-  rootpath: /Users/<name>/Programming/Php/Medflix/
-- name: ace
-  path: deployment/build.sh
-  rootpath: /Users/<name>/Programming/Php/Ace
+- Name: medbridge
+  Path: deployment/build.sh
+  Rootpath: /Users/<name>/Programming/Php/Medbridge
+- Name: medflix
+  Path: deployment/build.sh
+  Rootpath: /Users/<name>/Programming/Php/Medflix/
+- Name: ace
+  Path: deployment/build.sh
+  Rootpath: /Users/<name>/Programming/Php/Ace
 ```
