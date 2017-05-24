@@ -44,11 +44,11 @@ ReleasePath: /path/to/boatswain-values/deployment
 Builds:
 - Name: medbridge
   Path: deployment/build.sh
-  Rootpath: /Users/<name>/Programming/Php/Medbridge
+  RootPath: /Users/<name>/Programming/Php/Medbridge
 - Name: medflix
   Path: deployment/build.sh
-  Rootpath: /Users/<name>/Programming/Php/Medflix/
+  RootPath: /Users/<name>/Programming/Php/Medflix/
 - Name: ace
   Path: deployment/build.sh
-  Rootpath: /Users/<name>/Programming/Php/Ace
+  RootPath: /Users/<name>/Programming/Php/Ace
 ```
