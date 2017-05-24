@@ -3,7 +3,6 @@ package lib
 import (
 	"io/ioutil"
 
-	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -26,7 +25,7 @@ func NewServiceMapConfig() *ServiceMapConfig {
 
 func NewStagingServiceMapConfig() *ServiceMapConfig {
 	config := NewServiceMapConfig()
-	path := viper.GetString("release")
+	path := GetReleasePath()
 	fullPath := path + "/.servicemap/staging.yaml"
 	valuesBytes, err := ioutil.ReadFile(fullPath)
 

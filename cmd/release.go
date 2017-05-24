@@ -24,7 +24,7 @@ import (
 
 	utils "github.com/medbridge/boatswain/utilities"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/medbridge/boatswain/lib"
 )
 
 var env string
@@ -154,7 +154,7 @@ func RunRelease(args []string, options ReleaseOptions) {
 		fmt.Println("Output: ", xdebugHost)
 	}
 
-	releasePath := viper.GetString("release")
+	releasePath := lib.GetReleasePath()
 	appPath := releasePath + "/" + releaseName
 
 	fmt.Printf("boatswain | Deploying: %s\n", appPath)
@@ -197,7 +197,7 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 		fullSetValues += "," + options.OptSetValues
 	}
 
-	releasePath := viper.GetString("release")
+	releasePath := lib.GetReleasePath()
 	globalPath := releasePath + "/.global/"
 	globalValuesPath := globalPath + "values.yaml"
 	globalValuesEnvPath := globalPath + envPackfile

@@ -8,9 +8,9 @@ import (
 )
 
 type Build struct {
-	Name     string
-	Path     string
-	Rootpath string
+	Name     string `yaml:"Name"`
+	Path     string `yaml:"Path"`
+	Rootpath string `yaml:"RootPath"`
 	ImageTag string
 }
 

@@ -8,8 +8,12 @@ import (
 )
 
 type Config struct {
-	Release string
-	Builds  []Build
+	ReleasePath string  `yaml:"ReleasePath"`
+	Builds      []Build `yaml:"Builds"`
+}
+
+func GetReleasePath() string {
+	return viper.GetString("ReleasePath")
 }
 
 func LoadConfig() *Config {

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/spf13/viper"
 )
 
 var cfDir = ".cloudformation"
@@ -105,7 +104,7 @@ func (c *CloudFormationTemplate) ParseOutput(descOut *cloudformation.DescribeSta
 }
 
 func (c *CloudFormationTemplate) ReadFile(name string) {
-	path := viper.GetString("release")
+	path := GetReleasePath()
 	cfTemplate := path + "/" + cfDir + "/" + name + ".yaml"
 	yamlBytes, err := ioutil.ReadFile(cfTemplate)
 	if err != nil {
