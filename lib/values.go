@@ -68,6 +68,7 @@ func (v *Values) GetStagingYaml() string {
 ##################################################################
 
 Boatswain:
+  Active: true
   ImageTag: "{{.ImageTag}}"
   ServiceEnv:
     {{- range $key, $value := .Env }}
