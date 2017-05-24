@@ -1,0 +1,16 @@
+# Default Values for hydra.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+App:
+  ReplicaCount: 1
+
+DB:
+  ExternalName: hydra.random-chars.us-west-1.rds.amazonaws.com
+
+Secrets:
+  DB:
+    Password: production-password
+  System:
+    Secret: production-secret
+    RootUser: admin
+    RootPassword: production-password
