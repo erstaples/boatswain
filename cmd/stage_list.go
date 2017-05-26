@@ -17,19 +17,29 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/medbridge/boatswain/lib"
 	"github.com/spf13/cobra"
 )
 
-// stageCmd represents the stage command
-var StageCmd = &cobra.Command{
-	Use:   "stage [push|delete]",
-	Short: "A brief description of your command",
-	Long:  ``,
+var stageListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List active stagings",
+
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Use boatswain stage [push|delete]")
+		RunStageList(args)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(StageCmd)
+	StageCmd.AddCommand(stageListCmd)
+}
+
+//RunStageList output all active stagings
+func RunStageList(args []string) {
+	var confMap lib.StagingConfigMap
+	confMap.LoadConfigMap()
+	for _, staging := range confMap.Config {
+		fmt.Printf("\n* %s", staging.Name)
+	}
+
 }
