@@ -40,5 +40,5 @@ func init() {
 		panic(err)
 	}
 	defaultConfig := usr.HomeDir + "/.kube/config"
-	KubeconfigCmd.Flags().StringVarP(&file, "file", "f", defaultConfig, "Target kubeconfig file.")
+	KubeconfigCmd.PersistentFlags().StringVarP(&file, "file", "f", defaultConfig, "Target kubeconfig file.")
 }
