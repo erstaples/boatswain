@@ -21,6 +21,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var overwrite bool
+
 // mergeCmd represents the merge command
 var mergeCmd = &cobra.Command{
 	Use:   "merge <contextName> <mergePath>",
@@ -43,8 +45,9 @@ Merge /Users/foo/prod into ~/diff/kube/config:
 boatswain kubeconfig merge production /Users/foo/prod -f ~/diff/kube/config`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) < 2 {
+		if len(args) != 2 {
 			fmt.Println("Invalid arguments. Use --help option for usage")
+			return
 		}
 
 		contextName := args[0]
@@ -54,12 +57,17 @@ boatswain kubeconfig merge production /Users/foo/prod -f ~/diff/kube/config`,
 		mergeConfig := lib.NewKubeConfig(mergePath)
 		sourceConfig := lib.NewKubeConfig(sourcePath)
 
-		sourceConfig.MergeContext(mergeConfig, contextName)
-		sourceConfig.WriteFile()
+		if !sourceConfig.ContextExists(contextName) || overwrite {
+			sourceConfig.MergeContext(mergeConfig, contextName, overwrite)
+			sourceConfig.WriteFile()
+		} else {
+			fmt.Printf("Context already exists. Delete context %s first, or use the overwrite flag (-o)", contextName)
+		}
 
 	},
 }
 
 func init() {
 	KubeconfigCmd.AddCommand(mergeCmd)
+	mergeCmd.Flags().BoolVarP(&overwrite, "overwrite", "o", false, "Overwrite existing context if it already exists in the config file")
 }

@@ -3,6 +3,7 @@ package lib
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -114,15 +115,40 @@ func (kc *KubeConfig) ListContexts() {
 	}
 }
 
-func (kc *KubeConfig) MergeContext(mergeConfig *KubeConfig, contextName string) {
+func (kc *KubeConfig) MergeContext(mergeConfig *KubeConfig, contextName string, overwrite bool) {
 	userName := contextName + "-user"
 	mergeConfig.Contexts[0].Name = contextName
 	mergeConfig.Contexts[0].Context["user"] = userName
 	mergeConfig.Users[0].Name = userName
 
+	contextExists := kc.ContextExists(contextName)
+	if contextExists {
+		if overwrite {
+			kc.DeleteContext(contextName)
+		} else {
+			log.Fatal("Context exists; overwrite flag not set")
+		}
+	}
+
+	if contextExists && overwrite {
+		kc.DeleteContext(contextName)
+	} else if !overwrite && contextExists {
+		log.Fatal()
+	}
+
 	kc.Clusters = append(kc.Clusters, mergeConfig.Clusters[0])
 	kc.Contexts = append(kc.Contexts, mergeConfig.Contexts[0])
 	kc.Users = append(kc.Users, mergeConfig.Users[0])
+}
+
+func (kc *KubeConfig) ContextExists(name string) bool {
+	exists := false
+	for _, context := range kc.Contexts {
+		if context.Name == name {
+			exists = true
+		}
+	}
+	return exists
 }
 
 func readInConfig(kc *KubeConfig) {

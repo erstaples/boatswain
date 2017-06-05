@@ -43,6 +43,7 @@ boatswain kubeconfig delete staging -f ${HOME}/my/config
 
 		if len(args) != 1 {
 			fmt.Println("Invalid arguments. Use --help option for usage")
+			return
 		}
 		contextName := args[0]
 		sourcePath := file
