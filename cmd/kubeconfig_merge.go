@@ -26,7 +26,9 @@ var mergeCmd = &cobra.Command{
 	Use:   "merge <contextName> <mergePath>",
 	Short: "Merge two kubeconfig files",
 	Long: `Merge two kubeconfig files. By default, merge from <mergePath> into ${HOME}/.kube/config. 
-Sets the kubeconfig context based on <contextName>. For example:
+Sets the kubeconfig context based on <contextName>. merge only hanldes config in <mergePath> if it has a single context in it. 
+
+Examples:
 
 Merge /Users/foo/prod into ${HOME}/.kube/config with context name "production":
 boatswain kubeconfig merge production /Users/foo/prod
