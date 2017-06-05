@@ -23,8 +23,12 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List available contexts in a kubeconfig file",
-	Long: `List available contexts in a kubeconfig file. By default, target kubeconfig file is ${HOME}/.kube/config. 
-For example:
+	Long: `
+	
+List available contexts in a kubeconfig file. 
+By default, target kubeconfig file is ${HOME}/.kube/config. 
+
+Examples:
 
 List contexts from ${HOME}/.kube/config:
 boatswain kubeconfig list

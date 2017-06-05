@@ -23,20 +23,21 @@ import (
 
 // deleteCmd represents the merge command
 var deleteCmd = &cobra.Command{
-	Use: "delete <contextName>",
-	Short: `
-	Delete a context in a kubeconfig file`,
+	Use:   "delete <contextName>",
+	Short: `Delete a context in a kubeconfig file`,
 	Long: `
 
-	Delete a context in a kubeconfig file. 
-	By default, target kubeconfig file is ${HOME}/.kube/config. 
-	For example:
 
-	Delete context "staging" from ${HOME}/.kube/config:
-	boatswain kubeconfig delete staging
+Delete a context in a kubeconfig file. 
+By default, target kubeconfig file is ${HOME}/.kube/config. 
 
-	Delete context "staging" from ${HOME}/my/config:
-	boatswain kubeconfig delete staging -f ${HOME}/my/config
+Examples:
+
+Delete context "staging" from ${HOME}/.kube/config:
+boatswain kubeconfig delete staging
+
+Delete context "staging" from ${HOME}/my/config:
+boatswain kubeconfig delete staging -f ${HOME}/my/config
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 

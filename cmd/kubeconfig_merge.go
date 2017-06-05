@@ -25,8 +25,14 @@ import (
 var mergeCmd = &cobra.Command{
 	Use:   "merge <contextName> <mergePath>",
 	Short: "Merge two kubeconfig files",
-	Long: `Merge two kubeconfig files. By default, merge from <mergePath> into ${HOME}/.kube/config. 
-Sets the kubeconfig context based on <contextName>. merge only hanldes config in <mergePath> if it has a single context in it. 
+	Long: `
+	
+Merge two kubeconfig files. 
+By default, merge from <mergePath> into ${HOME}/.kube/config. 
+Sets the kubeconfig context based on <contextName>. 
+
+Important: merge only hanldes config in <mergePath> 
+if it has a single context in it. 
 
 Examples:
 
@@ -34,7 +40,7 @@ Merge /Users/foo/prod into ${HOME}/.kube/config with context name "production":
 boatswain kubeconfig merge production /Users/foo/prod
 
 Merge /Users/foo/prod into ~/diff/kube/config:
-boatswain kubeconfig merge production /Users/foo/prod --out ~/diff/kube/config`,
+boatswain kubeconfig merge production /Users/foo/prod -f ~/diff/kube/config`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 2 {
