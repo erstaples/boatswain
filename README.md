@@ -32,8 +32,6 @@ boatswain-values
 ```
 To learn more about the boatswain-values repo, [take a look at the example project](https://github.com/MedBridge/boatswain/tree/add-example-values/examples/boatswain-values/deployment).
 
-To learn more about the boatswain-values repo, [take a look at the example project]().
-
 ## Config file lives in `${HOME}/.boatswain.yaml`
 
 ## `boatswain stage push`
