@@ -21,37 +21,42 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// mergeCmd represents the merge command
-var mergeCmd = &cobra.Command{
-	Use:   "merge <contextName> <mergePath>",
-	Short: "Merge two kubeconfig files",
-	Long: `Merge two kubeconfig files. By default, merge from <mergePath> into ${HOME}/.kube/config. 
-Sets the kubeconfig context based on <contextName>. For example:
+// deleteCmd represents the merge command
+var deleteCmd = &cobra.Command{
+	Use: "delete <contextName>",
+	Short: `
+	Delete a context in a kubeconfig file`,
+	Long: `
 
-Merge /Users/foo/prod into ${HOME}/.kube/config with context name "production":
-boatswain kubeconfig merge production /Users/foo/prod
+	Delete a context in a kubeconfig file. 
+	By default, target kubeconfig file is ${HOME}/.kube/config. 
+	For example:
 
-Merge /Users/foo/prod into ~/diff/kube/config:
-boatswain kubeconfig merge production /Users/foo/prod --out ~/diff/kube/config`,
+	Delete context "staging" from ${HOME}/.kube/config:
+	boatswain kubeconfig delete staging
+
+	Delete context "staging" from ${HOME}/my/config:
+	boatswain kubeconfig delete staging -f ${HOME}/my/config
+	`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) < 2 {
+		if len(args) != 1 {
 			fmt.Println("Invalid arguments. Use --help option for usage")
 		}
-
 		contextName := args[0]
-		mergePath := args[1]
 		sourcePath := file
-
-		mergeConfig := lib.NewKubeConfig(mergePath)
 		sourceConfig := lib.NewKubeConfig(sourcePath)
 
-		sourceConfig.MergeContext(mergeConfig, contextName)
-		sourceConfig.WriteFile()
-
+		found := sourceConfig.DeleteContext(contextName)
+		if found {
+			sourceConfig.WriteFile()
+			fmt.Printf("Context deleted: %s", contextName)
+		} else {
+			fmt.Printf("Context not found: %s", contextName)
+		}
 	},
 }
 
 func init() {
-	KubeconfigCmd.AddCommand(mergeCmd)
+	KubeconfigCmd.AddCommand(deleteCmd)
 }

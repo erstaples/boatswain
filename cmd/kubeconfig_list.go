@@ -15,30 +15,31 @@
 package cmd
 
 import (
-	"fmt"
-	"os/user"
-
+	"github.com/medbridge/boatswain/lib"
 	"github.com/spf13/cobra"
 )
 
-var file string
+// listCmd represents the merge command
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List available contexts in a kubeconfig file",
+	Long: `List available contexts in a kubeconfig file. By default, target kubeconfig file is ${HOME}/.kube/config. 
+For example:
 
-// kubeconfigCmd represents the kubeconfig command
-var KubeconfigCmd = &cobra.Command{
-	Use: "kubeconfig",
+List contexts from ${HOME}/.kube/config:
+boatswain kubeconfig list
+
+List contexts from ${HOME}/my/config:
+boatswain kubeconfig list -f ${HOME}/my/config`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("Run `boatswain kubeconfig --help` for list of available subcommands.")
 
+		sourcePath := file
+
+		sourceConfig := lib.NewKubeConfig(sourcePath)
+		sourceConfig.ListContexts()
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(KubeconfigCmd)
-	usr, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	defaultConfig := usr.HomeDir + "/.kube/config"
-	KubeconfigCmd.Flags().StringVarP(&file, "file", "f", defaultConfig, "Target kubeconfig file.")
+	KubeconfigCmd.AddCommand(listCmd)
 }
