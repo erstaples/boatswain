@@ -1,4 +1,4 @@
-// Copyright © 2017 MedBridge Team
+// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,20 +16,29 @@ package cmd
 
 import (
 	"fmt"
+	"os/user"
 
 	"github.com/spf13/cobra"
 )
 
-// stageCmd represents the stage command
-var StageCmd = &cobra.Command{
-	Use:   "stage",
-	Short: "",
-	Long:  ``,
+var file string
+
+// kubeconfigCmd represents the kubeconfig command
+var KubeconfigCmd = &cobra.Command{
+	Use: "kubeconfig",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Run `boatswain stage --help` for list of available subcommands.")
+		// TODO: Work your own magic here
+		fmt.Println("Run `boatswain kubeconfig --help` for list of available subcommands.")
+
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(StageCmd)
+	RootCmd.AddCommand(KubeconfigCmd)
+	usr, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	defaultConfig := usr.HomeDir + "/.kube/config"
+	KubeconfigCmd.PersistentFlags().StringVarP(&file, "file", "f", defaultConfig, "Target kubeconfig file.")
 }

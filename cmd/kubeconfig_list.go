@@ -1,4 +1,4 @@
-// Copyright © 2017 MedBridge Team
+// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,21 +15,35 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/medbridge/boatswain/lib"
 	"github.com/spf13/cobra"
 )
 
-// stageCmd represents the stage command
-var StageCmd = &cobra.Command{
-	Use:   "stage",
-	Short: "",
-	Long:  ``,
+// listCmd represents the merge command
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List available contexts in a kubeconfig file",
+	Long: `
+	
+List available contexts in a kubeconfig file. 
+By default, target kubeconfig file is ${HOME}/.kube/config. 
+
+Examples:
+
+List contexts from ${HOME}/.kube/config:
+boatswain kubeconfig list
+
+List contexts from ${HOME}/my/config:
+boatswain kubeconfig list -f ${HOME}/my/config`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Run `boatswain stage --help` for list of available subcommands.")
+
+		sourcePath := file
+
+		sourceConfig := lib.NewKubeConfig(sourcePath)
+		sourceConfig.ListContexts()
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(StageCmd)
+	KubeconfigCmd.AddCommand(listCmd)
 }
