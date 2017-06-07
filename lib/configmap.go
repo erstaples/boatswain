@@ -2,12 +2,15 @@ package lib
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"strings"
 
+	logging "github.com/op/go-logging"
+
 	yaml "gopkg.in/yaml.v2"
 )
+
+var logger logging.Logger
 
 type StagingConfigMap struct {
 	Config   []StagingConfigMapEntry `yaml:"Config"`
@@ -55,7 +58,7 @@ data:
 	var doc bytes.Buffer
 	err = tmpl.Execute(&doc, m)
 	s := doc.String()
-	fmt.Printf("%s", s)
+	logger.Debugf("%s", s)
 
 	if err != nil {
 		panic(err)
@@ -74,7 +77,8 @@ func (m *StagingConfigMap) LoadConfigMap() {
 }
 
 //AddConfig appends a new StagingConfigMapEntry object to config list. If the entry with the same name exists, it replaces the existing entry
-func (m *StagingConfigMap) AddConfig(c StagingConfigMapEntry) {
+func (m *StagingConfigMap) AddConfig(c StagingConfigMapEntry, log logging.Logger) {
+	logger = log
 	found := false
 	for i, entry := range m.Config {
 		if entry.Name == c.Name {
@@ -89,10 +93,11 @@ func (m *StagingConfigMap) AddConfig(c StagingConfigMapEntry) {
 }
 
 //Save renders ConfigMap template and pushes it to k8s
-func (m *StagingConfigMap) Save() {
+func (m *StagingConfigMap) Save() string {
 	var k Kubectl
 	manifest := m.RenderTemplate()
 	k.UpdateConfigMap(manifest)
+	return manifest
 }
 
 func (m *StagingConfigMap) Find(name string) *StagingConfigMapEntry {

@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/op/go-logging"
 )
 
 var cfDir = ".cloudformation"
@@ -30,8 +30,8 @@ func NewCloudFormationTemplate(name string) *CloudFormationTemplate {
 
 //CreateStack calls the cloudformation.CreateStack method. If the stack has already been created,
 //then it gets the output from DescribeStack. Also sets .StackName property
-func (c *CloudFormationTemplate) CreateStack(suffix string) {
-	fmt.Printf("\nRunning CloudFormation stack [%s]", c.Name)
+func (c *CloudFormationTemplate) CreateStack(suffix string, logger logging.Logger) {
+	logger.Infof("\nRunning CloudFormation stack [%s]", c.Name)
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-west-2"),
 	}))
@@ -53,7 +53,7 @@ func (c *CloudFormationTemplate) CreateStack(suffix string) {
 	out, err := svc.CreateStack(createStackParams)
 	if err != nil {
 		if strings.Contains(err.Error(), "AlreadyExistsException") {
-			fmt.Printf("\nCloudFormation stack [%s] already exists. Skipping...", c.Name)
+			logger.Infof("\nCloudFormation stack [%s] already exists. Skipping...", c.Name)
 			descOut, err := svc.DescribeStacks(describeStacksParams)
 			if err != nil {
 				panic(err)
@@ -61,11 +61,11 @@ func (c *CloudFormationTemplate) CreateStack(suffix string) {
 			c.ParseOutput(descOut, cloudFormationValues)
 			return
 		} else {
-			fmt.Printf("%s", err)
+			logger.Criticalf("%s", err)
 			panic(err)
 		}
 	} else {
-		fmt.Printf("%s", out)
+		logger.Criticalf("%s", out)
 	}
 
 	stackReady := false
@@ -74,15 +74,15 @@ func (c *CloudFormationTemplate) CreateStack(suffix string) {
 
 		descOut, err := svc.DescribeStacks(describeStacksParams)
 		if err != nil {
-			fmt.Printf("%s", err)
+			logger.Criticalf("%s", err)
 			panic(err)
 		} else {
-			fmt.Printf("\nCloudFormation stack [%s] is creating...", c.Name)
+			logger.Infof("\nCloudFormation stack [%s] is creating...", c.Name)
 		}
 
 		if *descOut.Stacks[0].StackStatus == "CREATE_COMPLETE" {
 			stackReady = true
-			fmt.Printf("\nCloudFormation stack [%s] ready...\n", c.Name)
+			logger.Infof("\nCloudFormation stack [%s] ready...\n", c.Name)
 			c.ParseOutput(descOut, cloudFormationValues)
 		}
 

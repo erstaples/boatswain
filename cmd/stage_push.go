@@ -58,7 +58,7 @@ func RunStagePush(args []string) {
 
 	if len(smap.CloudFormationTemplate) > 0 {
 		cloudformation = *lib.NewCloudFormationTemplate(smap.CloudFormationTemplate)
-		cloudformation.CreateStack(packageID)
+		cloudformation.CreateStack(packageID, Logger)
 	}
 
 	for _, build := range builds {
@@ -69,7 +69,7 @@ func RunStagePush(args []string) {
 	for _, svc := range smap.Test {
 		values := lib.NewValues(packageID, svc, imageTags[svc], env)
 		values.CloudFormationValues = cloudformation.Output
-		runRelease(svc, values.Write())
+		runRelease(svc, values.Write(Logger))
 		helmDeploys = append(helmDeploys, svc)
 	}
 
@@ -81,7 +81,7 @@ func RunStagePush(args []string) {
 			HelmDeployments:     helmDeploys,
 			Name:                packageID,
 			Ingress:             ingressHost,
-		})
+		}, Logger)
 
 }
 
