@@ -21,20 +21,28 @@ import (
 	"os"
 	"os/user"
 
+	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+var format = logging.MustStringFormatter(
+	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+)
+
 // Version represents the app version. Used in `boatswain version` command
 var Version = "v1.0.1-beta.2"
+
+// Verbose output switch
+var verbose bool
+var Logger logging.Logger
 var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "boatswain",
 	Short: "Utility to deploy applications and services",
-	Long: `Provides a set of tools to deploy applications and services to a Kubernetes
-cluster. 
+	Long: `Provides a set of tools to deploy applications and services to a Kubernetes cluster. 
 
 Boatswain does things like: 
 * generates ingresses on the fly
@@ -46,7 +54,30 @@ It makes some assumptions about your environment, which might be refactored in t
 for portability:
 * You have helm and kubectl installed and in your path
 * You have a boatswain values repository
-`,
+`, PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		Logger = *logging.MustGetLogger("boatswain")
+		backend := logging.NewLogBackend(os.Stderr, "boatswain: ", 0)
+		backendFormatted := logging.NewBackendFormatter(backend, format)
+		backendLeveled := logging.AddModuleLevel(backendFormatted)
+		var logLevel logging.Level
+		if verbose {
+			logLevel = logging.DEBUG
+		} else {
+			logLevel = logging.CRITICAL
+		}
+		backendLeveled.SetLevel(logLevel, "")
+		logging.SetBackend(backendLeveled)
+
+	},
+
+	Run: func(cmd *cobra.Command, args []string) {
+		Logger.Debugf("debug stuff")
+		Logger.Info("info")
+		Logger.Notice("notice")
+		Logger.Warning("warning")
+		Logger.Error("err")
+		Logger.Critical("crit")
+	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -60,14 +91,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -83,7 +107,6 @@ func initConfig() {
 		genConfig()
 	}
 }
-
 func genConfig() {
 	fmt.Print("Enter path to boatswain/deployment folder (absolute path)\n")
 	reader := bufio.NewReader(os.Stdin)
