@@ -129,7 +129,7 @@ func RunRelease(args []string, options ReleaseOptions) {
 		envPackfile = "values.prod.yaml"
 		useK8sCurrContext("production")
 	default:
-		Logger.Fatalf("\nInvalid environment: %s", env)
+		Logger.Fatalf("Invalid environment: %s", env)
 		os.Exit(1)
 	}
 
@@ -151,13 +151,13 @@ func RunRelease(args []string, options ReleaseOptions) {
 			os.Exit(1)
 		}
 		xdebugHost = string(cmdOut)
-		Logger.Debugf("\nxdebugHost: %s", xdebugHost)
+		Logger.Debugf("xdebugHost: %s", xdebugHost)
 	}
 
 	releasePath := lib.GetReleasePath()
 	appPath := releasePath + "/" + releaseName
 
-	Logger.Infof("\nDeploying %s", appPath)
+	Logger.Infof("Deploying %s", appPath)
 
 	//build helm cmd
 	//add standard values to be made available in the helm releases

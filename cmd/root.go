@@ -26,15 +26,19 @@ import (
 	"github.com/spf13/viper"
 )
 
-var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+var debugFormat = logging.MustStringFormatter(
+	`%{color}%{shortfunc} ▶ %{level:.8s} %{color:reset} %{message}`,
+)
+
+var stdFormat = logging.MustStringFormatter(
+	`%{color}%{level:.8s} %{color:reset} %{message}`,
 )
 
 // Version represents the app version. Used in `boatswain version` command
 var Version = "v1.0.1-beta.2"
 
 // Verbose output switch
-var verbose bool
+var verbosity string
 var Logger logging.Logger
 var cfgFile string
 
@@ -57,14 +61,25 @@ for portability:
 `, PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		Logger = *logging.MustGetLogger("boatswain")
 		backend := logging.NewLogBackend(os.Stderr, "boatswain: ", 0)
+		format := stdFormat
+
+		var logLevel logging.Level
+		switch verbosity {
+		case "debug":
+			logLevel = logging.DEBUG
+			format = debugFormat
+			break
+		case "info":
+			logLevel = logging.INFO
+			break
+		case "critical":
+			logLevel = logging.CRITICAL
+			break
+		default:
+			logLevel = logging.INFO
+		}
 		backendFormatted := logging.NewBackendFormatter(backend, format)
 		backendLeveled := logging.AddModuleLevel(backendFormatted)
-		var logLevel logging.Level
-		if verbose {
-			logLevel = logging.DEBUG
-		} else {
-			logLevel = logging.CRITICAL
-		}
 		backendLeveled.SetLevel(logLevel, "")
 		logging.SetBackend(backendLeveled)
 
@@ -91,7 +106,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
+	RootCmd.PersistentFlags().StringVarP(&verbosity, "verbosity", "v", "info", "Available values: debug,info,critical")
 }
 
 // initConfig reads in config file and ENV variables if set.
