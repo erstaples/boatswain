@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/user"
 
+	"github.com/medbridge/boatswain/lib"
 	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -40,6 +41,7 @@ var Version = "v1.0.1-beta.2"
 // Verbose output switch
 var verbosity string
 var Logger logging.Logger
+var Deps *lib.DepChecker
 var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
@@ -83,6 +85,9 @@ for portability:
 		backendLeveled.SetLevel(logLevel, "")
 		logging.SetBackend(backendLeveled)
 
+		Deps = lib.NewDepChecker(Logger)
+		Deps.CheckDepHelm()
+		Deps.CheckDepKubectl()
 	},
 }
 

@@ -16,8 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 
 	"github.com/medbridge/boatswain/lib"
 	"github.com/medbridge/mocking/factories"
@@ -35,6 +33,10 @@ var stagePushCmd = &cobra.Command{
 	Long: `Push an application or bundle of applications to staging
 
 	`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		Deps.CheckDepAWS()
+		Deps.CheckDepDocker()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		RunStagePush(args)
 	},
@@ -52,9 +54,6 @@ func RunStagePush(args []string) {
 		fmt.Printf("Unexpected number of args. Expected 2, got %c", len(args))
 		return
 	}
-
-	checkDeps()
-	return
 
 	serviceMapName := args[0]
 	packageID = args[1]
@@ -122,22 +121,4 @@ func genIngress(config lib.ServiceMapConfig) {
 	}
 
 	RunGenIngress(args, cmdFactory, options)
-}
-
-func checkDeps() {
-	cmdDocker := "docker"
-	cmdDockerArgs := []string{"info"}
-	_, err := exec.Command(cmdDocker, cmdDockerArgs...).CombinedOutput()
-	if err != nil {
-		Logger.Critical("Docker is not running. Please start docker and try again. To install Docker for Mac, go here: https://docs.docker.com/docker-for-mac/install/")
-		os.Exit(1)
-	}
-
-	cmdAws := "which"
-	cmdAwsArgs := []string{"aws"}
-	_, err = exec.Command(cmdAws, cmdAwsArgs...).CombinedOutput()
-	if err != nil {
-		Logger.Critical("AWS is not in installed or is not in your PATH. Install with homebrew (`brew install awscli`) or go here: http://docs.aws.amazon.com/cli/latest/userguide/installing.html")
-		os.Exit(1)
-	}
 }
