@@ -84,15 +84,6 @@ for portability:
 		logging.SetBackend(backendLeveled)
 
 	},
-
-	Run: func(cmd *cobra.Command, args []string) {
-		Logger.Debugf("debug stuff")
-		Logger.Info("info")
-		Logger.Notice("notice")
-		Logger.Warning("warning")
-		Logger.Error("err")
-		Logger.Critical("crit")
-	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

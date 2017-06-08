@@ -2,39 +2,56 @@ package utilities
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"os/exec"
+
+	logging "github.com/op/go-logging"
 )
 
-func ExecStreamOut(cmdName string, cmdArgs []string, streamPrefix string) *exec.Cmd {
+func ExecStreamOut(cmdName string, cmdArgs []string, logger logging.Logger, exitOnError bool) *exec.Cmd {
 	cmd := exec.Command(cmdName, cmdArgs...)
 
 	//https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error creating StdoutPipe for Cmd", err)
+		logger.Criticalf("Error creating StdoutPipe for cmd")
 		os.Exit(1)
 	}
+
+	errReader, err := cmd.StderrPipe()
+	errScanner := bufio.NewScanner(errReader)
+	go func() {
+		for errScanner.Scan() {
+			if exitOnError {
+				logger.Criticalf("%s", errScanner.Text())
+			} else {
+				logger.Warningf("%s", errScanner.Text())
+			}
+		}
+	}()
 
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
 		for scanner.Scan() {
 			//build.sh
-			fmt.Printf("%s | %s\n", streamPrefix, scanner.Text())
+			logger.Infof("%s", scanner.Text())
 		}
 	}()
 
 	err = cmd.Start()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
-		os.Exit(1)
+		if exitOnError {
+			logger.Criticalf("Error starting Cmd: %s", err)
+			os.Exit(1)
+		}
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error waiting for Cmd", err)
-		os.Exit(1)
+		if exitOnError {
+			logger.Criticalf("Error waiting for Cmd: %s", err)
+			os.Exit(1)
+		}
 	}
 
 	return cmd

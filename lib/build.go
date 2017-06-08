@@ -5,6 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/medbridge/boatswain/utilities"
+	logging "github.com/op/go-logging"
 )
 
 type Build struct {
@@ -12,6 +13,7 @@ type Build struct {
 	Path     string `yaml:"Path"`
 	Rootpath string `yaml:"RootPath"`
 	ImageTag string
+	Logger   *logging.Logger
 }
 
 //Exec Runs the build shell script at Path
@@ -20,7 +22,8 @@ func (b *Build) Exec() string {
 	cmdArgs := []string{b.Path, "push"}
 
 	os.Chdir(b.Rootpath)
-	utilities.ExecStreamOut(cmdName, cmdArgs, "build.sh")
+	b.Logger.Infof("Running %s", append([]string{cmdName}, cmdArgs...))
+	utilities.ExecStreamOut(cmdName, cmdArgs, *b.Logger, true)
 
 	b.SetImageTag()
 	return b.ImageTag
@@ -35,12 +38,14 @@ func (b *Build) SetImageTag() {
 	if err != nil {
 		panic(err)
 	}
+	cmd := append([]string{cmdName}, cmdArgs...)
+	b.Logger.Debugf("%s: %s", cmd, out)
 	b.ImageTag = string(out[:])
 }
 
 //GetBuilds iterates over a service map and returns an array of Build objects that are needed for the release. Builds are defined in the ~/.boatswain.yaml config file
-func GetBuilds(smap ServiceMap) []Build {
-	config := LoadConfig()
+func GetBuilds(smap ServiceMap, logger logging.Logger) []Build {
+	config := LoadConfig(&logger)
 	var builds []Build
 	for _, svc := range smap.Test {
 		for _, build := range config.Builds {

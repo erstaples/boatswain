@@ -16,6 +16,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 
 	"github.com/medbridge/boatswain/lib"
 	"github.com/medbridge/mocking/factories"
@@ -23,6 +25,8 @@ import (
 )
 
 var build = lib.Build{}
+var stagePushNoExecute bool
+var stagePushDryRun bool
 var packageID string
 
 var stagePushCmd = &cobra.Command{
@@ -38,6 +42,9 @@ var stagePushCmd = &cobra.Command{
 
 func init() {
 	StageCmd.AddCommand(stagePushCmd)
+	// stagePushCmd.Flags().BoolVar(&skipBuild, "skip-build", false, "Runs helm command")
+	stagePushCmd.Flags().BoolVarP(&stagePushNoExecute, "no-execute", "n", false, "Runs build and echoes helm upgrade command, but does not deploy to the cluster")
+	stagePushCmd.Flags().BoolVarP(&stagePushDryRun, "dry-run", "d", false, "Outputs helm upgrade command and yaml without deploying to the cluster")
 }
 
 func RunStagePush(args []string) {
@@ -46,11 +53,14 @@ func RunStagePush(args []string) {
 		return
 	}
 
+	checkDeps()
+	return
+
 	serviceMapName := args[0]
 	packageID = args[1]
 	smapConfig := lib.NewStagingServiceMapConfig()
 	smap := smapConfig.GetServiceMap(serviceMapName)
-	builds := lib.GetBuilds(*smap)
+	builds := lib.GetBuilds(*smap, Logger)
 	cloudformation := lib.CloudFormationTemplate{Output: make(map[string]string)}
 	env := smap.GetEnvironmentVars(packageID)
 	imageTags := make(map[string]string)
@@ -62,6 +72,7 @@ func RunStagePush(args []string) {
 	}
 
 	for _, build := range builds {
+		build.Logger = &Logger
 		imageTags[build.Name] = build.Exec()
 	}
 
@@ -73,27 +84,28 @@ func RunStagePush(args []string) {
 		helmDeploys = append(helmDeploys, svc)
 	}
 
-	genIngress(*smapConfig)
+	if !stagePushDryRun && !stagePushNoExecute {
+		genIngress(*smapConfig)
 
-	lib.NewStagingConfigMap().AddConfig(
-		lib.StagingConfigMapEntry{
-			CloudFormationStack: cloudformation.StackName,
-			HelmDeployments:     helmDeploys,
-			Name:                packageID,
-			Ingress:             ingressHost,
-		}, Logger)
-
+		lib.NewStagingConfigMap().AddConfig(
+			lib.StagingConfigMapEntry{
+				CloudFormationStack: cloudformation.StackName,
+				HelmDeployments:     helmDeploys,
+				Name:                packageID,
+				Ingress:             ingressHost,
+			}, Logger)
+	}
 }
 
 func runRelease(name string, valuesFile string) {
 	args := []string{name}
 	options := ReleaseOptions{
 		Environment:       "staging",
-		DryRun:            false,
+		DryRun:            stagePushDryRun,
 		Namespace:         "default",
 		Packfile:          valuesFile,
 		Xdebug:            false,
-		NoExecute:         false,
+		NoExecute:         stagePushNoExecute,
 		PackageIDOverride: packageID,
 	}
 
@@ -110,4 +122,22 @@ func genIngress(config lib.ServiceMapConfig) {
 	}
 
 	RunGenIngress(args, cmdFactory, options)
+}
+
+func checkDeps() {
+	cmdDocker := "docker"
+	cmdDockerArgs := []string{"info"}
+	_, err := exec.Command(cmdDocker, cmdDockerArgs...).CombinedOutput()
+	if err != nil {
+		Logger.Critical("Docker is not running. Please start docker and try again. To install Docker for Mac, go here: https://docs.docker.com/docker-for-mac/install/")
+		os.Exit(1)
+	}
+
+	cmdAws := "which"
+	cmdAwsArgs := []string{"aws"}
+	_, err = exec.Command(cmdAws, cmdAwsArgs...).CombinedOutput()
+	if err != nil {
+		Logger.Critical("AWS is not in installed or is not in your PATH. Install with homebrew (`brew install awscli`) or go here: http://docs.aws.amazon.com/cli/latest/userguide/installing.html")
+		os.Exit(1)
+	}
 }

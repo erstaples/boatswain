@@ -84,7 +84,7 @@ func init() {
 
 	//set option flags
 	releaseCmd.Flags().StringVarP(&env, "environment", "e", "development", "Target environment for the release. 'production', 'staging', and 'development' are valid options")
-	releaseCmd.Flags().BoolVarP(&dryrun, "dry-run", "d", false, "Dry run. Outputs the generated yaml files without deploying")
+	releaseCmd.Flags().BoolVarP(&dryrun, "dry-run", "d", false, "Outputs the generated yaml files without deploying")
 	releaseCmd.Flags().StringVarP(&ns, "namespace", "n", "default", "Namespace to deploy to")
 	releaseCmd.Flags().StringVarP(&packfile, "packfile", "p", "", "The values yaml file to use")
 	releaseCmd.Flags().BoolVarP(&xdebug, "xdebug", "x", false, "Enables xdebug (for dev environments only)")
@@ -245,7 +245,7 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 	}
 
 	confirm := true
-	cmdString := strings.Join(cmdArgs, " ")
+	cmdString := cmdName + " " + strings.Join(cmdArgs, " ")
 	Logger.Info(cmdString)
 
 	if !options.NoExecute {
@@ -262,7 +262,9 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 				cmd := exec.Command(cmdName, cmdArgs...)
 				out, err := executeReleaseCmd(cmd)
 				if err != nil && tries == 3 {
+					Logger.Criticalf("%s", out)
 					Logger.Criticalf("%s", err)
+					os.Exit(1)
 				}
 
 				if err == nil {
