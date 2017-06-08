@@ -28,8 +28,8 @@ var stagePushDryRun bool
 var packageID string
 
 var stagePushCmd = &cobra.Command{
-	Use:   "push [appnames] [domain]",
-	Short: "Push an application(s) to staging",
+	Use:   "push <appname> <domain>",
+	Short: "Push an deployment to staging",
 	Long: `Push an application or bundle of applications to staging
 
 	`,

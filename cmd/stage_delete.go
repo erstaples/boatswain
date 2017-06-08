@@ -27,7 +27,7 @@ import (
 
 var stageDeleteCmd = &cobra.Command{
 	Use:   "delete [appnames] [domain]",
-	Short: "Delete an application(s) from staging",
+	Short: "Delete a deployment from staging",
 	Long: `Delete an application or bundle of applications from staging
 	
 	`,

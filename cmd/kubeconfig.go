@@ -25,7 +25,8 @@ var file string
 
 // kubeconfigCmd represents the kubeconfig command
 var KubeconfigCmd = &cobra.Command{
-	Use: "kubeconfig",
+	Use:   "kubeconfig",
+	Short: "Manage kubeconfig files",
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
 		fmt.Println("Run `boatswain kubeconfig --help` for list of available subcommands.")

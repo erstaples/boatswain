@@ -35,13 +35,14 @@ var stdFormat = logging.MustStringFormatter(
 	`%{color}%{level:.8s} %{color:reset} %{message}`,
 )
 
+var Logger logging.Logger
+var Deps *lib.DepChecker
+
 // Version represents the app version. Used in `boatswain version` command
 var Version = "v1.0.1-beta.2"
 
 // Verbose output switch
 var verbosity string
-var Logger logging.Logger
-var Deps *lib.DepChecker
 var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands

@@ -50,7 +50,7 @@ type ReleaseOptions struct {
 // releaseCmd represents the release command
 var releaseCmd = &cobra.Command{
 	Use:   "release appname",
-	Short: "Deploys application to minikube, staging, or production cluster",
+	Short: "Deploy applications to minikube, staging, or production cluster",
 	Long: `Wraps around a helm install command to automate common helm configuration
 	options. Sets packageId, environment, and other important values.Execute
 	

@@ -23,8 +23,7 @@ import (
 // stageCmd represents the stage command
 var StageCmd = &cobra.Command{
 	Use:   "stage",
-	Short: "",
-	Long:  ``,
+	Short: "Manage staging deployments",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Run `boatswain stage --help` for list of available subcommands.")
 	},
