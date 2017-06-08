@@ -52,9 +52,9 @@ boatswain kubeconfig delete staging -f ${HOME}/my/config
 		found := sourceConfig.DeleteContext(contextName)
 		if found {
 			sourceConfig.WriteFile()
-			fmt.Printf("Context deleted: %s", contextName)
+			Logger.Infof("Context deleted: %s", contextName)
 		} else {
-			fmt.Printf("Context not found: %s", contextName)
+			Logger.Warningf("Context not found: %s", contextName)
 		}
 	},
 }

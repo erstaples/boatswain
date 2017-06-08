@@ -57,18 +57,18 @@ func RunStageDelete(args []string) {
 		fullName := domain + "-" + helm
 		out, err := exec.Command("helm", "delete", fullName).CombinedOutput()
 		if err != nil {
-			fmt.Printf("%s", err)
+			Logger.Errorf("%s", err)
 		} else {
-			fmt.Printf("%s", out)
+			Logger.Infof("%s", out)
 		}
 	}
 
 	//delete ing
 	out, err := exec.Command("kubectl", "delete", "ing", entry.Ingress).CombinedOutput()
 	if err != nil {
-		fmt.Printf("%s", err)
+		Logger.Errorf("%s", err)
 	} else {
-		fmt.Printf("%s", out)
+		Logger.Infof("%s", out)
 	}
 
 	//delete values
@@ -94,9 +94,10 @@ func RunStageDelete(args []string) {
 
 		out, err := svc.DeleteStack(deleteStackParams)
 		if err != nil {
+			Logger.Errorf("%s", err)
 			panic(err)
 		} else {
-			fmt.Printf("%s", out)
+			Logger.Infof("%s", out)
 		}
 
 	}

@@ -114,7 +114,7 @@ func genConfig() {
 
 	yaml := "ReleasePath: " + path
 	config := []byte(yaml)
-	fmt.Printf("Creating config file at: %s", cfgFile)
+	Logger.Infof("Creating config file at %s", cfgFile)
 	err := ioutil.WriteFile(cfgFile, config, 0644)
 	if err != nil {
 		panic(err)

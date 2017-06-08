@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/medbridge/boatswain/lib"
 	utils "github.com/medbridge/boatswain/utilities"
 	"github.com/spf13/cobra"
-	"github.com/medbridge/boatswain/lib"
 )
 
 var env string
@@ -129,7 +129,7 @@ func RunRelease(args []string, options ReleaseOptions) {
 		envPackfile = "values.prod.yaml"
 		useK8sCurrContext("production")
 	default:
-		fmt.Println("Invalid environment: " + env)
+		Logger.Fatalf("\nInvalid environment: %s", env)
 		os.Exit(1)
 	}
 
@@ -147,17 +147,17 @@ func RunRelease(args []string, options ReleaseOptions) {
 			err    error
 		)
 		if cmdOut, err = getXDebugHost(); err != nil {
-			fmt.Fprintln(os.Stderr, "There was an error running ipconfig command: ", err)
+			Logger.Fatalf("There was an error running ipconfig command: %s", err)
 			os.Exit(1)
 		}
 		xdebugHost = string(cmdOut)
-		fmt.Println("Output: ", xdebugHost)
+		Logger.Debugf("\nxdebugHost: %s", xdebugHost)
 	}
 
 	releasePath := lib.GetReleasePath()
 	appPath := releasePath + "/" + releaseName
 
-	fmt.Printf("boatswain | Deploying: %s\n", appPath)
+	Logger.Infof("\nDeploying %s", appPath)
 
 	//build helm cmd
 	//add standard values to be made available in the helm releases
@@ -210,7 +210,7 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 	if pathExists(packfileFullPath) {
 		fullPackFiles = packfileFullPath
 	} else {
-		utils.EchoWarningMessage(envPackfile + " does not exist. Running helm upgrade with values.yaml only\n")
+		Logger.Debug(envPackfile + " does not exist. Running helm upgrade with values.yaml only\n")
 	}
 
 	if pathExists(globalPath) {
@@ -246,14 +246,14 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 
 	confirm := true
 	cmdString := strings.Join(cmdArgs, " ")
-	fmt.Printf("boatswain | %s", cmdString)
+	Logger.Info(cmdString)
 
 	if !options.NoExecute {
 		if env == "production" && !dryrun {
 			confirm = askForReleaseConfirmation(fullReleaseName)
 		}
 		if confirm {
-			fmt.Printf("\n%s\n", msg)
+			Logger.Info(msg)
 			tries := 0
 			for tries < 3 {
 				tries++
@@ -262,11 +262,11 @@ func execHelmUpgradeCmd(fullReleaseName string, appPath string, setValues string
 				cmd := exec.Command(cmdName, cmdArgs...)
 				out, err := executeReleaseCmd(cmd)
 				if err != nil && tries == 3 {
-					fmt.Printf("%s", err)
+					Logger.Criticalf("%s", err)
 				}
 
 				if err == nil {
-					fmt.Printf("%s", out)
+					Logger.Infof("%s", out)
 					tries = 3
 				}
 

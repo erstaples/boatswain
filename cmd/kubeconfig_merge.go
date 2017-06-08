@@ -61,7 +61,7 @@ boatswain kubeconfig merge production /Users/foo/prod -f ~/diff/kube/config`,
 			sourceConfig.MergeContext(mergeConfig, contextName, overwrite)
 			sourceConfig.WriteFile()
 		} else {
-			fmt.Printf("Context already exists. Delete context %s first, or use the overwrite flag (-o)", contextName)
+			Logger.Fatalf("Context already exists. Delete context %s first, or use the overwrite flag (-o)", contextName)
 		}
 
 	},

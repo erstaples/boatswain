@@ -10,22 +10,13 @@ import (
 
 var ColorNone = "\033[00m"
 var ColorYellow = "\033[01;33m"
-var ColorGreen = "\033[01;32m"
-
-func EchoWarningMessage(msg string) {
-	fmt.Printf("%s%s%s", ColorYellow, msg, ColorNone)
-}
-
-func EchoGoodMessage(msg string) {
-	fmt.Printf("%s%s%s", ColorGreen, msg, ColorNone)
-}
 
 func AskForConfirmation(msg string) bool {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
 		fmt.Println("")
-		EchoWarningMessage(msg)
+		fmt.Printf("%s%s%s", ColorYellow, msg, ColorNone)
 
 		response, err := reader.ReadString('\n')
 		if err != nil {
@@ -40,8 +31,4 @@ func AskForConfirmation(msg string) bool {
 			return false
 		}
 	}
-}
-
-func PrintWrapper(prefix string, msg string) {
-	fmt.Printf("%s | %s\n", prefix, msg)
 }
