@@ -8,13 +8,7 @@ Global:
     LicenseKey: abc123
 ```
 
-Global values operate under the same principles as standard Helm package values files. In other words, the `.globals/values.prod.yaml` values will override the `.global/values.yaml` values. When deploying to production, for instance, `.Global.NewRelic.LicenseKey` will evaluate to `the-production-key-goes-here`
-
-```yaml
-Global:
-  NewRelic:
-    LicenseKey: the-production-key-goes-here
-```
+Global values operate using the same logic as standard Helm package values files. `.globals/values.prod.yaml` values will override the `.global/values.yaml` values for production, `values.staging.yaml` for staging, `values.env.yaml` for local deployments.
 
 Global values can be accessed via the `.Values.Global` value object. For example, in the Hydra template, we use the New Relic global property like so:
 

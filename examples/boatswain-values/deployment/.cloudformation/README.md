@@ -85,4 +85,4 @@ It's then up to the developer to configure the helm templates to make use of `.V
 
 ## Bro, do you even CloudFormate?
 
-The details of how to develop CloudFormation templates are outside the scope of this document. For more information on CloudFormation Templates, [visit the CloudFormation template page](https://aws.amazon.com/cloudformation/aws-cloudformation-templates/)
+The details of how to develop CloudFormation templates are outside the scope of this document. For more information on how to build CloudFormation templates, [visit the CloudFormation template page](https://aws.amazon.com/cloudformation/aws-cloudformation-templates/)
