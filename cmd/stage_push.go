@@ -16,6 +16,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
+	"regexp"
 
 	"github.com/medbridge/boatswain/lib"
 	"github.com/medbridge/mocking/factories"
@@ -28,7 +31,7 @@ var stagePushDryRun bool
 var packageID string
 
 var stagePushCmd = &cobra.Command{
-	Use:   "push <appname> <domain>",
+	Use:   "push <appname> <packageId>",
 	Short: "Push an deployment to staging",
 	Long: `Push an application or bundle of applications to staging
 
@@ -57,6 +60,13 @@ func RunStagePush(args []string) {
 
 	serviceMapName := args[0]
 	packageID = args[1]
+
+	regex := regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
+	if len(regex.FindString(packageID)) != len(packageID) {
+		Logger.Criticalf("Invalid package ID. Package ID must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '%s')", regex.String())
+		os.Exit(1)
+	}
+
 	smapConfig := lib.NewStagingServiceMapConfig()
 	smap := smapConfig.GetServiceMap(serviceMapName)
 	builds := lib.GetBuilds(*smap, Logger)

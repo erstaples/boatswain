@@ -39,7 +39,7 @@ var Logger logging.Logger
 var Deps *lib.DepChecker
 
 // Version represents the app version. Used in `boatswain version` command
-var Version = "v1.0.1-beta.2"
+var Version = "v1.0.1"
 
 // Verbose output switch
 var verbosity string
